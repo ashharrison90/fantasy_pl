@@ -1,0 +1,14 @@
+"""Some useful constants for the fantasy premier league"""
+FANTASY_API_URL = "https://fantasy.premierleague.com/drf/bootstrap-static"
+FANTASY_PLAYER_API_URL = "https://fantasy.premierleague.com/drf/element-summary/"
+STARTING_MIN_ATTACKERS = 1
+STARTING_MIN_DEFENDERS = 3
+STARTING_MIN_GOALKEEPERS = 1
+STARTING_MIN_MIDFIELDERS = 2
+STARTING_SIZE = 11
+SQUAD_MAX_PLAYERS_SAME_TEAM = 3
+SQUAD_NUM_ATTACKERS = 5
+SQUAD_NUM_DEFENDERS = 5
+SQUAD_NUM_GOALKEEPERS = 2
+SQUAD_NUM_MIDFIELDERS = 5
+TRANSFER_POINT_DEDUCTION = 4
