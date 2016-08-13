@@ -1,11 +1,21 @@
-"""Functions used to calculate the expected points total for a given player."""
+"""
+Functions used to calculate the expected points total for a given player.
+"""
 import re
 
-def predict_points(json_object, json_fixtures_object):
+def predict_points(json_object, json_fixture_object):
     """Given a player's json object, this function attempts to predict
     how many points a given player will score in the next gameweek.
     See example.json for a player's json object."""
-    return json_object, json_fixtures_object
+    form = json_object["form"]
+    ppg = json_object["points_per_game"]
+    if form != "0.0":
+        expected_points = float(form)
+    else:
+        expected_points = float(ppg)
+    injury_ratio = get_injury_multiplier(json_object)
+    fixture_ratio = get_fixture_multiplier(json_fixture_object)
+    return expected_points * injury_ratio * fixture_ratio
 
 def get_injury_multiplier(json_object):
     """Given a player's json object, extract an injury/suspension ratio.

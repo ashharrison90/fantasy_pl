@@ -1,5 +1,7 @@
-"""Functions used to grab the json data from the fantasy premier league api."""
-from constants import FANTASY_API_URL, FANTASY_PLAYER_API_URL
+"""
+Functions used to grab the json data from the fantasy premier league api.
+"""
+from constants import ELO_API_URL, FANTASY_API_URL, FANTASY_PLAYER_API_URL
 import requests
 
 def grab_all():
@@ -24,3 +26,9 @@ def grab_player_by_name(first_name, second_name):
 def grab_player_fixtures(player_id):
     """Grab a single player's full history and fixture list using their id."""
     return requests.get(FANTASY_PLAYER_API_URL + str(player_id)).json()
+
+def grab_elo_data(club_name):
+    """Grab a club's ELO rating from the clubelo.com. This is then used to
+    calculate the probability of a team winning."""
+    elo_data = requests.get(ELO_API_URL + str(club_name)).text
+    return elo_data
