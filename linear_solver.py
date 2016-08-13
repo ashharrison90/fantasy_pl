@@ -12,6 +12,7 @@ locale.setlocale(locale.LC_ALL, '')
 PLAYER_DATA = data_grabber.grab_all()["elements"]
 PROB = pulp.LpProblem('Fantasy PL', pulp.LpMaximize)
 TOTAL_POINTS = 0
+TEAM_REPRESENTATION = [0] * 20
 TEAM_VALUE = 0
 NUM_GOAL = 0
 NUM_DEF = 0
@@ -19,10 +20,11 @@ NUM_MID = 0
 NUM_ATT = 0
 
 for player in PLAYER_DATA:
-    print("\rGetting data for player:", player['id'], end='')
+    print("\rRetrieving player:", player['id'], end='')
     player['selected'] = pulp.LpVariable(player['id'], cat='Binary')
     fixture_data = data_grabber.grab_player_fixtures(player['id'])
     player['expected_points'] = points.predict_points(player, fixture_data)
+    TEAM_REPRESENTATION[player['team'] - 1] += player['selected']
     PLAYER_TYPE = player['element_type']
     TOTAL_POINTS += player['selected'] * player['expected_points']
     TEAM_VALUE += player['selected'] * player['now_cost']
@@ -35,12 +37,14 @@ for player in PLAYER_DATA:
     elif PLAYER_TYPE == 4:
         NUM_ATT += player['selected']
 
-print("\n")
+print("\rPlayer data retrieved!\n")
 
 # Add our function to maximise to the problem
 PROB += TOTAL_POINTS
 
 # Add constraints
+for TEAM_COUNT in TEAM_REPRESENTATION:
+    PROB += (TEAM_COUNT <= constants.SQUAD_MAX_PLAYERS_SAME_TEAM)
 PROB += (TEAM_VALUE <= constants.INITIAL_TEAM_VALUE)
 PROB += (NUM_GOAL == constants.SQUAD_NUM_GOALKEEPERS)
 PROB += (NUM_DEF == constants.SQUAD_NUM_DEFENDERS)
