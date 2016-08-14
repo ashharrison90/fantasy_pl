@@ -6,18 +6,24 @@ import constants
 import data_grabber
 import points
 import pulp
+import auth_service
 
 locale.setlocale(locale.LC_ALL, '')
 
+auth_service.login('XXXXXXXXXXXXXXXXXXXXXXXXXXX', 'XXXXXXXXX')
+TEAM = auth_service.get_squad()
+TEAM_IDS = [player['element'] for player in TEAM]
+
 PLAYER_DATA = data_grabber.grab_all()["elements"]
 PROB = pulp.LpProblem('Fantasy PL', pulp.LpMaximize)
-TOTAL_POINTS = 0
 TEAM_REPRESENTATION = [0] * 20
 TEAM_VALUE = 0
+TOTAL_POINTS = 0
 NUM_GOAL = 0
 NUM_DEF = 0
 NUM_MID = 0
 NUM_ATT = 0
+NUM_CHANGES = 0
 
 for player in PLAYER_DATA:
     print("\rRetrieving player:", player['id'], end='')
@@ -36,9 +42,12 @@ for player in PLAYER_DATA:
         NUM_MID += player['selected']
     elif PLAYER_TYPE == 4:
         NUM_ATT += player['selected']
+    if player['id'] not in TEAM_IDS:
+        NUM_CHANGES += player['selected']
 
 print("\rPlayer data retrieved!\n")
 
+TOTAL_POINTS -= (NUM_CHANGES * constants.TRANSFER_POINT_DEDUCTION)
 # Add our function to maximise to the problem
 PROB += TOTAL_POINTS
 
@@ -54,6 +63,7 @@ PROB += (NUM_ATT == constants.SQUAD_NUM_ATTACKERS)
 # Solve!
 RESULT = PROB.solve()
 print("Total expected points:", pulp.value(TOTAL_POINTS))
+print("Number of transfers:", pulp.value(NUM_CHANGES))
 print("Team value: ", locale.currency(pulp.value(TEAM_VALUE)), "\n")
 
 for player in PLAYER_DATA:
