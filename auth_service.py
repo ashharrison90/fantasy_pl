@@ -35,7 +35,6 @@ def login(username, password):
 def get_squad():
     """
     Get the current selected squad from the fantasy football web app.
-    Returns a list of player_ids in the squad.
     Note: must be logged in first!
     """
     SQUAD_REQUEST_HEADERS = {

@@ -1,6 +1,7 @@
 """
 Functions needed to solve the linear optimisation problem
 """
+import sys
 import locale
 import constants
 import data_grabber
@@ -10,12 +11,8 @@ import auth_service
 
 locale.setlocale(locale.LC_ALL, '')
 
-auth_service.login('XXXXXXXXXXXXXXXXXXXXXXXXXXX', 'XXXXXXXXX')
-TEAM = auth_service.get_squad()
-TEAM_IDS = [player['element'] for player in TEAM]
-
-PLAYER_DATA = data_grabber.grab_all()["elements"]
-PROB = pulp.LpProblem('Fantasy PL', pulp.LpMaximize)
+USERNAME = sys.argv[1]
+PASSWORD = sys.argv[2]
 TEAM_REPRESENTATION = [0] * 20
 TEAM_VALUE = 0
 TOTAL_POINTS = 0
@@ -25,6 +22,16 @@ NUM_MID = 0
 NUM_ATT = 0
 NUM_CHANGES = 0
 
+# Login and get the current team
+auth_service.login(USERNAME, PASSWORD)
+TEAM = auth_service.get_squad()
+TEAM_IDS = [player['element'] for player in TEAM]
+
+# Define the linear optimisation problem
+PROB = pulp.LpProblem('Fantasy PL', pulp.LpMaximize)
+
+# Loop through every player and add them to the constraints
+PLAYER_DATA = data_grabber.grab_all()["elements"]
 for player in PLAYER_DATA:
     print("\rRetrieving player:", player['id'], end='')
     player['selected'] = pulp.LpVariable(player['id'], cat='Binary')
@@ -47,8 +54,8 @@ for player in PLAYER_DATA:
 
 print("\rPlayer data retrieved!\n")
 
-TOTAL_POINTS -= (NUM_CHANGES * constants.TRANSFER_POINT_DEDUCTION)
 # Add our function to maximise to the problem
+TOTAL_POINTS -= (NUM_CHANGES * constants.TRANSFER_POINT_DEDUCTION)
 PROB += TOTAL_POINTS
 
 # Add constraints
