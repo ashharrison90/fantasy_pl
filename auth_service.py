@@ -3,7 +3,7 @@ Connect and manage authorisation to fantasy.premierleague.com.
 """
 import urllib.parse
 import requests
-from constants import LOGIN_URL, FANTASY_URL, SQUAD_URL
+from constants import LOGIN_URL, FANTASY_URL, SQUAD_URL, TRANSFER_URL
 
 # Create a session - this persists cookies across requests
 MY_SESSION = requests.Session()
@@ -41,4 +41,16 @@ def get_squad():
         'X-Requested-With': 'XMLHttpRequest'
     }
     squad = MY_SESSION.get(SQUAD_URL, headers=SQUAD_REQUEST_HEADERS).json()['picks']
+    return squad
+
+def get_transfers_squad():
+    """
+    Get the current selected squad from the transfers page.
+    This gives more information about transfers, such as selling price.
+    Note: must be logged in first!
+    """
+    SQUAD_REQUEST_HEADERS = {
+        'X-Requested-With': 'XMLHttpRequest'
+    }
+    squad = MY_SESSION.get(TRANSFER_URL, headers=SQUAD_REQUEST_HEADERS).json()
     return squad
