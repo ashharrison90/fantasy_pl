@@ -3,9 +3,9 @@ Functions needed to solve the linear optimisation problem
 """
 import locale
 import constants
-import data_grabber
 import points
 import pulp
+import web_service
 
 locale.setlocale(locale.LC_ALL, '')
 
@@ -26,11 +26,11 @@ def select_squad(current_squad):
     squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
 
     # Loop through every player and add them to the constraints
-    all_players = data_grabber.grab_all()["elements"]
+    all_players = web_service.grab_all()["elements"]
     for player in all_players:
         print("\rRetrieving player:", player['id'], end='')
         player['selected'] = pulp.LpVariable(player['id'], cat='Binary')
-        fixture_data = data_grabber.grab_player_fixtures(player['id'])
+        fixture_data = web_service.grab_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points(player, fixture_data)
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
@@ -99,11 +99,11 @@ def select_squad_ignore_transfers(bank):
     squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
 
     # Loop through every player and add them to the constraints
-    all_players = data_grabber.grab_all()["elements"]
+    all_players = web_service.grab_all()["elements"]
     for player in all_players:
         print("\rRetrieving player:", player['id'], end='')
         player['selected'] = pulp.LpVariable(player['id'], cat='Binary')
-        fixture_data = data_grabber.grab_player_fixtures(player['id'])
+        fixture_data = web_service.grab_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points(player, fixture_data)
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
