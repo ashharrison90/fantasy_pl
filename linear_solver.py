@@ -147,7 +147,7 @@ def select_starting(squad):
     """
     # Define and get some necessary constants
     starting_points = num_goal_starting = num_def_starting = num_mid_starting = num_att_starting = num_starting = 0
-    starting_lineup = []
+    starting_lineup = {'picks': []}
     # Define the starting lineup linear optimisation problem
     starting_prob = pulp.LpProblem('Starting line up points', pulp.LpMaximize)
 
@@ -177,12 +177,50 @@ def select_starting(squad):
     starting_prob.solve()
     print("Estimated starting points:", pulp.value(starting_points))
 
-    squad = sorted(squad, key=lambda player: (player['element_type'], player['starting']))
+    counter = 1
+    sub_counter = 13
+    captain = vice_captain = (0, 0)
+    squad = sorted(squad, key=lambda player: (player['starting'], player['element_type']))
     for player in squad:
+        player_type = player['element_type']
         if pulp.value(player['starting']) == 1:
             print("X", player['expected_points'], player['id'], player['first_name'], player['second_name'], player['element_type'], locale.currency(player['now_cost']))
-            starting_lineup.append(player)
+            if player['expected_points'] > captain[1]:
+                vice_captain = captain
+                captain = (counter, player['expected_points'])
+            elif player['expected_points'] > vice_captain[1]:
+                vice_captain = (counter, player['expected_points'])
+            starting_lineup['picks'].append({
+                'element': player['id'],
+                'position': counter,
+                'is_captain': 'false',
+                'is_vice_captain': 'false'
+            })
+            counter += 1
         else:
             print("-", player['expected_points'], player['id'], player['first_name'], player['second_name'], player['element_type'], locale.currency(player['now_cost']))
+            if player_type == 1:
+                starting_lineup['picks'].append({
+                    'element': player['id'],
+                    'position': 12,
+                    'is_captain': 'false',
+                    'is_vice_captain': 'false'
+                })
+            else:
+                starting_lineup['picks'].append({
+                    'element': player['id'],
+                    'position': sub_counter,
+                    'is_captain': 'false',
+                    'is_vice_captain': 'false'
+                })
+                sub_counter += 1
+
+
+    # Set the captain and vice captain
+    for player in starting_lineup['picks']:
+        if player['position'] == captain[0]:
+            player['is_captain'] = 'true'
+        elif player['position'] == vice_captain[0]:
+            player['is_vice_captain'] = 'true'
 
     return starting_lineup

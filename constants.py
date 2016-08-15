@@ -7,7 +7,7 @@ FANTASY_API_URL = 'https://fantasy.premierleague.com/drf/bootstrap-static'
 FANTASY_API_DYNAMIC_URL = 'https://fantasy.premierleague.com/drf/bootstrap-dynamic'
 FANTASY_PLAYER_API_URL = 'https://fantasy.premierleague.com/drf/element-summary/'
 LOGIN_URL = 'https://users.premierleague.com/accounts/login/'
-SQUAD_URL_PREFIX = 'https://fantasy.premierleague.com/drf/my-team/'
+SQUAD_URL = 'https://fantasy.premierleague.com/drf/my-team/'
 TRANSFER_URL = 'https://fantasy.premierleague.com/drf/transfers'
 
 # Data we grab from the web services

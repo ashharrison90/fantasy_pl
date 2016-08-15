@@ -22,10 +22,11 @@ CURRENT_SQUAD = web_service.get_transfers_squad()
 # Calculate the new squad
 new_squad = linear_solver.select_squad(CURRENT_SQUAD)
 
-# TODO make transfers to update the squad on fantasy.premierleague.com
-transfer_request = web_service.make_transfers(CURRENT_SQUAD['picks'], new_squad)
+# make transfers to update the squad on fantasy.premierleague.com
+web_service.make_transfers(CURRENT_SQUAD['picks'], new_squad)
 
 # Calculate the new starting lineup
 new_starting = linear_solver.select_starting(new_squad)
 
-# TODO update the starting lineup on fantasy.premierleague.com
+# update the starting lineup on fantasy.premierleague.com
+set_starting = web_service.set_starting_lineup(new_starting)
