@@ -16,7 +16,7 @@ def get_squad():
     squad_request_headers = {
         'X-Requested-With': 'XMLHttpRequest'
     }
-    squad = MY_SESSION.get(constants.SQUAD_URL, headers=squad_request_headers).json()['picks']
+    squad = MY_SESSION.get(constants.SQUAD_URL_PREFIX + str(constants.SQUAD_ID) + '/', headers=squad_request_headers).json()['picks']
     return squad
 
 def get_transfers_squad():
@@ -84,3 +84,42 @@ def login(username, password):
 
     # Make a GET request to fantasy.premierleague.com to get the correct cookies
     MY_SESSION.get(constants.FANTASY_URL)
+    static_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
+    constants.EVENT_NUMBER = static_data['next-event']
+    constants.SQUAD_ID = static_data['entry']['id']
+
+def make_transfers(old_squad, new_squad):
+    """
+    Given lists containing the old(/current)_squad and the new_squad, make the necessary transfers.
+    """
+    # Create our transfers object and players_in/out lists
+    new_squad_ids = [player['id'] for player in new_squad]
+    old_squad_ids = [player['element'] for player in old_squad]
+    players_in = [player for player in new_squad if player['id'] not in old_squad_ids]
+    players_out = [player for player in old_squad if player['element'] not in new_squad_ids]
+    transfer_object = {
+        'confirmed': 'true',
+        'entry': constants.SQUAD_ID,
+        'event': constants.EVENT_NUMBER,
+        'transfers': [],
+        'wildcard': 'false'
+    }
+
+    # for each player_in/player_out create a transfer
+    for i in range(len(players_in)):
+        transfer_object['transfers'].append({
+            'element_in': players_in[i]['id'],
+            'purchase_price': players_in[i]['now_cost'],
+            'element_out': players_out[i]['element'],
+            'selling_price': players_out[i]['selling_price']
+        })
+
+    MY_SESSION.get('https://fantasy.premierleague.com/a/squad/transfers')
+    csrf_token = MY_SESSION.cookies.get('csrftoken', domain='fantasy.premierleague.com')
+
+    transfer_headers = {
+        'X-CSRFToken': csrf_token,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Referer': 'https://fantasy.premierleague.com/a/squad/transfers'
+    }
+    return MY_SESSION.post(constants.TRANSFER_URL, headers=transfer_headers, json=transfer_object)
