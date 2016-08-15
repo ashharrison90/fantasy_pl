@@ -1,131 +1,188 @@
 """
 Functions needed to solve the linear optimisation problem
 """
-import sys
 import locale
 import constants
 import data_grabber
 import points
 import pulp
-import auth_service
 
 locale.setlocale(locale.LC_ALL, '')
 
-USERNAME = sys.argv[1]
-PASSWORD = sys.argv[2]
-TEAM_REPRESENTATION = [0] * 20
-ESTIMATED_SQUAD_POINTS = 0
-ESTIMATED_STARTING_POINTS = 0
-SELECTED_SQUAD = []
-NUM_GOAL = 0
-NUM_DEF = 0
-NUM_MID = 0
-NUM_ATT = 0
-NUM_GOAL_STARTING = 0
-NUM_DEF_STARTING = 0
-NUM_MID_STARTING = 0
-NUM_ATT_STARTING = 0
-NUM_STARTING = 0
-NUM_CHANGES = 0
+def select_squad(current_squad):
+    """
+    Given the current squad, calculate the best possible squad for next week.
+    """
+    # Define and get some necessary constants
+    teams_represented = [0] * 20
+    new_squad = []
+    new_squad_points = num_changes = num_goal = num_def = num_mid = num_att = 0
+    current_squad_ids = [player['element'] for player in current_squad['picks']]
+    free_transfers = current_squad['helper']['transfers_state']['free']
+    squad_value = current_squad['helper']['value']
+    bank = squad_value + current_squad['helper']['bank']
 
-# Login and get the current team
-auth_service.login(USERNAME, PASSWORD)
-TEAM = auth_service.get_transfers_squad()
-TEAM_IDS = [player['element'] for player in TEAM['picks']]
+    # Define the squad linear optimisation problem
+    squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
 
-# Get some necessary constants
-FREE_TRANSFERS = TEAM['helper']['transfers_state']['free']
-TEAM_VALUE = TEAM['helper']['value']
-BANK = TEAM_VALUE + TEAM['helper']['bank']
+    # Loop through every player and add them to the constraints
+    all_players = data_grabber.grab_all()["elements"]
+    for player in all_players:
+        print("\rRetrieving player:", player['id'], end='')
+        player['selected'] = pulp.LpVariable(player['id'], cat='Binary')
+        fixture_data = data_grabber.grab_player_fixtures(player['id'])
+        player['expected_points'] = points.predict_points(player, fixture_data)
+        teams_represented[player['team'] - 1] += player['selected']
+        player_type = player['element_type']
+        new_squad_points += player['selected'] * player['expected_points']
+        if player_type == 1:
+            num_goal += player['selected']
+        elif player_type == 2:
+            num_def += player['selected']
+        elif player_type == 3:
+            num_mid += player['selected']
+        elif player_type == 4:
+            num_att += player['selected']
+        if player['id'] in current_squad_ids:
+            index = current_squad_ids.index(player['id'])
+            selling_price = current_squad['picks'][index]['selling_price']
+            squad_value -= (1 - player['selected']) * selling_price
+        else:
+            num_changes += player['selected']
+            squad_value += player['selected'] * player['now_cost']
 
-# Define the squad linear optimisation problem
-PROB = pulp.LpProblem('Squad points', pulp.LpMaximize)
+    print("\rPlayer data retrieved!\n")
 
-# Loop through every player and add them to the constraints
-PLAYER_DATA = data_grabber.grab_all()["elements"]
-for player in PLAYER_DATA:
-    print("\rRetrieving player:", player['id'], end='')
-    player['selected'] = pulp.LpVariable(player['id'], cat='Binary')
-    fixture_data = data_grabber.grab_player_fixtures(player['id'])
-    player['expected_points'] = points.predict_points(player, fixture_data)
-    TEAM_REPRESENTATION[player['team'] - 1] += player['selected']
-    PLAYER_TYPE = player['element_type']
-    ESTIMATED_SQUAD_POINTS += player['selected'] * player['expected_points']
-    if PLAYER_TYPE == 1:
-        NUM_GOAL += player['selected']
-    elif PLAYER_TYPE == 2:
-        NUM_DEF += player['selected']
-    elif PLAYER_TYPE == 3:
-        NUM_MID += player['selected']
-    elif PLAYER_TYPE == 4:
-        NUM_ATT += player['selected']
-    if player['id'] in TEAM_IDS:
-        index = TEAM_IDS.index(player['id'])
-        selling_price = TEAM['picks'][index]['selling_price']
-        TEAM_VALUE -= (1 - player['selected']) * selling_price
-    else:
-        NUM_CHANGES += player['selected']
-        TEAM_VALUE += player['selected'] * player['now_cost']
+    # Account for free transfers and cost transfers
+    free_transfers_used = pulp.LpVariable(
+        'free_transfers_used',
+        cat='Integer',
+        lowBound=0,
+        upBound=free_transfers
+    )
+    transfer_cost = ((num_changes - free_transfers_used) * constants.TRANSFER_POINT_DEDUCTION)
 
-print("\rPlayer data retrieved!\n")
+    # Add problem and constraints
+    squad_prob += new_squad_points - transfer_cost
+    for team_count in teams_represented:
+        squad_prob += (team_count <= constants.SQUAD_MAX_PLAYERS_SAME_TEAM)
+    squad_prob += (squad_value <= bank)
+    squad_prob += (num_goal == constants.SQUAD_NUM_GOALKEEPERS)
+    squad_prob += (num_def == constants.SQUAD_NUM_DEFENDERS)
+    squad_prob += (num_mid == constants.SQUAD_NUM_MIDFIELDERS)
+    squad_prob += (num_att == constants.SQUAD_NUM_ATTACKERS)
+    squad_prob += (num_changes - free_transfers_used >= 0)
 
-# Add our function to maximise to the problem
-FREE_TRANSFERS_USED = pulp.LpVariable('FREE_TRANSFERS_USED', cat='Integer', lowBound=0, upBound=FREE_TRANSFERS)
-TRANSFER_COST = ((NUM_CHANGES - FREE_TRANSFERS_USED) * constants.TRANSFER_POINT_DEDUCTION)
-PROB += ESTIMATED_SQUAD_POINTS - TRANSFER_COST
+    # Solve!
+    squad_prob.solve()
 
-# Add constraints
-for TEAM_COUNT in TEAM_REPRESENTATION:
-    PROB += (TEAM_COUNT <= constants.SQUAD_MAX_PLAYERS_SAME_TEAM)
-PROB += (TEAM_VALUE <= BANK)
-PROB += (NUM_GOAL == constants.SQUAD_NUM_GOALKEEPERS)
-PROB += (NUM_DEF == constants.SQUAD_NUM_DEFENDERS)
-PROB += (NUM_MID == constants.SQUAD_NUM_MIDFIELDERS)
-PROB += (NUM_ATT == constants.SQUAD_NUM_ATTACKERS)
-PROB += (NUM_CHANGES - FREE_TRANSFERS_USED >= 0)
+    for player in all_players:
+        if pulp.value(player['selected']) == 1:
+            new_squad.append(player)
 
-# Solve!
-PROB.solve()
+    print("Estimated squad points:", pulp.value(new_squad_points))
+    print("Number of transfers:", pulp.value(num_changes))
+    print("Cost of transfers:", pulp.value(transfer_cost))
+    print("Team value: ", locale.currency(pulp.value(squad_value)), "\n")
+    return new_squad
 
-for player in PLAYER_DATA:
-    if pulp.value(player['selected']) == 1:
-        SELECTED_SQUAD.append(player)
+def select_squad_ignore_transfers(bank):
+    """
+    Ignoring the current squad, calculate the best possible squad for next week.
+    """
+    # Define and get some necessary constants
+    teams_represented = [0] * 20
+    new_squad = []
+    new_squad_points = squad_value = num_goal = num_def = num_mid = num_att = 0
 
-PROB_STARTING = pulp.LpProblem('Starting line up points', pulp.LpMaximize)
+    # Define the squad linear optimisation problem
+    squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
 
-for player in SELECTED_SQUAD:
-    player['starting'] = pulp.LpVariable(str(player['id']) + "_starting", cat='Binary')
-    PLAYER_TYPE = player['element_type']
-    NUM_STARTING += player['starting']
-    ESTIMATED_STARTING_POINTS += player['starting'] * player['expected_points']
-    if PLAYER_TYPE == 1:
-        NUM_GOAL_STARTING += player['starting']
-    elif PLAYER_TYPE == 2:
-        NUM_DEF_STARTING += player['starting']
-    elif PLAYER_TYPE == 3:
-        NUM_MID_STARTING += player['starting']
-    elif PLAYER_TYPE == 4:
-        NUM_ATT_STARTING += player['starting']
+    # Loop through every player and add them to the constraints
+    all_players = data_grabber.grab_all()["elements"]
+    for player in all_players:
+        print("\rRetrieving player:", player['id'], end='')
+        player['selected'] = pulp.LpVariable(player['id'], cat='Binary')
+        fixture_data = data_grabber.grab_player_fixtures(player['id'])
+        player['expected_points'] = points.predict_points(player, fixture_data)
+        teams_represented[player['team'] - 1] += player['selected']
+        player_type = player['element_type']
+        new_squad_points += player['selected'] * player['expected_points']
+        squad_value += player['selected'] * player['now_cost']
+        if player_type == 1:
+            num_goal += player['selected']
+        elif player_type == 2:
+            num_def += player['selected']
+        elif player_type == 3:
+            num_mid += player['selected']
+        elif player_type == 4:
+            num_att += player['selected']
 
-# Add problem and constraints
-PROB_STARTING += ESTIMATED_STARTING_POINTS
-PROB_STARTING += (NUM_GOAL_STARTING == constants.STARTING_MIN_GOALKEEPERS)
-PROB_STARTING += (NUM_DEF_STARTING >= constants.STARTING_MIN_DEFENDERS)
-PROB_STARTING += (NUM_MID_STARTING >= constants.STARTING_MIN_MIDFIELDERS)
-PROB_STARTING += (NUM_ATT_STARTING >= constants.STARTING_MIN_ATTACKERS)
-PROB_STARTING += (NUM_STARTING == constants.STARTING_SIZE)
+    print("\rPlayer data retrieved!\n")
 
-# Solve!
-PROB_STARTING.solve()
-print("Estimated squad points:", pulp.value(ESTIMATED_SQUAD_POINTS))
-print("Estimated starting points:", pulp.value(ESTIMATED_STARTING_POINTS))
-print("Number of transfers:", pulp.value(NUM_CHANGES))
-print("Cost of transfers:", pulp.value(TRANSFER_COST))
-print("Team value: ", locale.currency(pulp.value(TEAM_VALUE)), "\n")
+    # Add problem and constraints
+    squad_prob += new_squad_points
+    for team_count in teams_represented:
+        squad_prob += (team_count <= constants.SQUAD_MAX_PLAYERS_SAME_TEAM)
+    squad_prob += (squad_value <= bank)
+    squad_prob += (num_goal == constants.SQUAD_NUM_GOALKEEPERS)
+    squad_prob += (num_def == constants.SQUAD_NUM_DEFENDERS)
+    squad_prob += (num_mid == constants.SQUAD_NUM_MIDFIELDERS)
+    squad_prob += (num_att == constants.SQUAD_NUM_ATTACKERS)
 
-SELECTED_SQUAD = sorted(SELECTED_SQUAD, key=lambda player: (player['element_type'], player['starting']))
-for player in SELECTED_SQUAD:
-    if pulp.value(player['starting']) == 1:
-        print("X", player['expected_points'], player['id'], player['first_name'], player['second_name'], player['element_type'], locale.currency(player['now_cost']))
-    else:
-        print("-", player['expected_points'], player['id'], player['first_name'], player['second_name'], player['element_type'], locale.currency(player['now_cost']))
+    # Solve!
+    squad_prob.solve()
+
+    for player in all_players:
+        if pulp.value(player['selected']) == 1:
+            new_squad.append(player)
+
+    print("Estimated squad points:", pulp.value(new_squad_points))
+    print("Team value: ", locale.currency(pulp.value(squad_value)), "\n")
+    return new_squad
+
+def select_starting(squad):
+    """
+    Given a squad, select the best possible starting lineup.
+    """
+    # Define and get some necessary constants
+    starting_points = num_goal_starting = num_def_starting = num_mid_starting = num_att_starting = num_starting = 0
+    starting_lineup = []
+    # Define the starting lineup linear optimisation problem
+    starting_prob = pulp.LpProblem('Starting line up points', pulp.LpMaximize)
+
+    for player in squad:
+        player['starting'] = pulp.LpVariable(str(player['id']) + "_starting", cat='Binary')
+        player_type = player['element_type']
+        num_starting += player['starting']
+        starting_points += player['starting'] * player['expected_points']
+        if player_type == 1:
+            num_goal_starting += player['starting']
+        elif player_type == 2:
+            num_def_starting += player['starting']
+        elif player_type == 3:
+            num_mid_starting += player['starting']
+        elif player_type == 4:
+            num_att_starting += player['starting']
+
+    # Add problem and constraints
+    starting_prob += starting_points
+    starting_prob += (num_goal_starting == constants.STARTING_MIN_GOALKEEPERS)
+    starting_prob += (num_def_starting >= constants.STARTING_MIN_DEFENDERS)
+    starting_prob += (num_mid_starting >= constants.STARTING_MIN_MIDFIELDERS)
+    starting_prob += (num_att_starting >= constants.STARTING_MIN_ATTACKERS)
+    starting_prob += (num_starting == constants.STARTING_SIZE)
+
+    # Solve!
+    starting_prob.solve()
+    print("Estimated starting points:", pulp.value(starting_points))
+
+    squad = sorted(squad, key=lambda player: (player['element_type'], player['starting']))
+    for player in squad:
+        if pulp.value(player['starting']) == 1:
+            print("X", player['expected_points'], player['id'], player['first_name'], player['second_name'], player['element_type'], locale.currency(player['now_cost']))
+            starting_lineup.append(player)
+        else:
+            print("-", player['expected_points'], player['id'], player['first_name'], player['second_name'], player['element_type'], locale.currency(player['now_cost']))
+
+    return starting_lineup
