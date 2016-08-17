@@ -89,10 +89,11 @@ def login(username, password):
 
     # Make a GET request to fantasy.premierleague.com to get the correct cookies
     MY_SESSION.get(constants.FANTASY_URL)
-    static_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
-    constants.EVENT_NUMBER = static_data['next-event']
-    constants.SQUAD_ID = static_data['entry']['id']
+    dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
+    constants.NEXT_EVENT = dynamic_data['next-event']
+    constants.SQUAD_ID = dynamic_data['entry']['id']
     constants.SQUAD_URL += str(constants.SQUAD_ID) + "/"
+    constants.TRANSFER_DEADLINE = dynamic_data['next_event_fixtures'][0]["deadline_time"]
 
 def make_transfers(old_squad, new_squad):
     """
@@ -107,7 +108,7 @@ def make_transfers(old_squad, new_squad):
     transfer_object = {
         'confirmed': 'true',
         'entry': constants.SQUAD_ID,
-        'event': constants.EVENT_NUMBER,
+        'event': constants.NEXT_EVENT,
         'transfers': [],
         'wildcard': 'false'
     }

@@ -8,8 +8,9 @@ The main program.
     6. Update the starting lineup on fantasy.premierleague.com.
 """
 import sys
-import web_service
+import constants
 import linear_solver
+import web_service
 
 # Login
 USERNAME = sys.argv[1]
@@ -29,4 +30,8 @@ web_service.make_transfers(CURRENT_SQUAD['picks'], new_squad)
 new_starting = linear_solver.select_starting(new_squad)
 
 # update the starting lineup on fantasy.premierleague.com
-set_starting = web_service.set_starting_lineup(new_starting)
+web_service.set_starting_lineup(new_starting)
+
+# NOTE this must be printed last as the shell script needs this value
+print("Deadline for next event is:")
+print(constants.TRANSFER_DEADLINE)

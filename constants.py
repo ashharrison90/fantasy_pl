@@ -11,8 +11,9 @@ SQUAD_URL = 'https://fantasy.premierleague.com/drf/my-team/'
 TRANSFER_URL = 'https://fantasy.premierleague.com/drf/transfers'
 
 # Data we grab from the web services
-EVENT_NUMBER = None
+NEXT_EVENT = None
 SQUAD_ID = None
+TRANSFER_DEADLINE = None
 
 # Constraints
 STARTING_MIN_ATTACKERS = 1
