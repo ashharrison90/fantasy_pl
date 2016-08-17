@@ -29,7 +29,7 @@ def select_squad(current_squad):
     all_players = web_service.grab_all()["elements"]
     for player in all_players:
         print("\rRetrieving player:", player['id'], end='')
-        player['selected'] = pulp.LpVariable(player['id'], cat='Binary')
+        player['selected'] = pulp.LpVariable("player_" + str(player['id']), cat='Binary')
         fixture_data = web_service.grab_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points(player, fixture_data)
         teams_represented[player['team'] - 1] += player['selected']
@@ -74,7 +74,8 @@ def select_squad(current_squad):
     squad_prob += (num_changes - free_transfers_used >= 0)
 
     # Solve!
-    squad_prob.solve()
+    # On the pi, we need to use the GLPK solver.
+    squad_prob.solve(pulp.GLPK_CMD())
 
     for player in all_players:
         if pulp.value(player['selected']) == 1:
@@ -102,7 +103,7 @@ def select_squad_ignore_transfers(bank):
     all_players = web_service.grab_all()["elements"]
     for player in all_players:
         print("\rRetrieving player:", player['id'], end='')
-        player['selected'] = pulp.LpVariable(player['id'], cat='Binary')
+        player['selected'] = pulp.LpVariable("player_" + player['id'], cat='Binary')
         fixture_data = web_service.grab_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points(player, fixture_data)
         teams_represented[player['team'] - 1] += player['selected']
@@ -131,7 +132,8 @@ def select_squad_ignore_transfers(bank):
     squad_prob += (num_att == constants.SQUAD_NUM_ATTACKERS)
 
     # Solve!
-    squad_prob.solve()
+    # On the pi, we need to use the GLPK solver.
+    squad_prob.solve(pulp.GLPK_CMD())
 
     for player in all_players:
         if pulp.value(player['selected']) == 1:
@@ -152,7 +154,7 @@ def select_starting(squad):
     starting_prob = pulp.LpProblem('Starting line up points', pulp.LpMaximize)
 
     for player in squad:
-        player['starting'] = pulp.LpVariable(str(player['id']) + "_starting", cat='Binary')
+        player['starting'] = pulp.LpVariable("player_" + str(player['id']) + "_starting", cat='Binary')
         player_type = player['element_type']
         num_starting += player['starting']
         starting_points += player['starting'] * player['expected_points']
@@ -174,7 +176,8 @@ def select_starting(squad):
     starting_prob += (num_starting == constants.STARTING_SIZE)
 
     # Solve!
-    starting_prob.solve()
+    # On the pi, we need to use the GLPK solver.
+    starting_prob.solve(pulp.GLPK_CMD())
     print("Estimated starting points:", pulp.value(starting_points))
 
     counter = 1
@@ -187,9 +190,9 @@ def select_starting(squad):
             print("X", player['expected_points'], player['id'], player['first_name'], player['second_name'], player['element_type'], locale.currency(player['now_cost']))
             if player['expected_points'] > captain[1]:
                 vice_captain = captain
-                captain = (counter, player['expected_points'])
+                captain = (player['id'], player['expected_points'])
             elif player['expected_points'] > vice_captain[1]:
-                vice_captain = (counter, player['expected_points'])
+                vice_captain = (player['id'], player['expected_points'])
             starting_lineup['picks'].append({
                 'element': player['id'],
                 'position': counter,
@@ -218,9 +221,9 @@ def select_starting(squad):
 
     # Set the captain and vice captain
     for player in starting_lineup['picks']:
-        if player['position'] == captain[0]:
+        if player['id'] == captain[0]:
             player['is_captain'] = 'true'
-        elif player['position'] == vice_captain[0]:
+        elif player['id'] == vice_captain[0]:
             player['is_vice_captain'] = 'true'
 
     return starting_lineup
