@@ -137,8 +137,9 @@ def make_transfers(old_squad, new_squad):
             'Referer': 'https://fantasy.premierleague.com/a/squad/transfers'
         }
         result = MY_SESSION.post(constants.TRANSFER_URL, headers=transfer_headers, json=transfer_object)
-        print(result)
-        print(result.text)
+        if result.status_code != 200:
+            print(result)
+            print(result.text)
         return result
     else:
         response_success = requests.Response
@@ -156,6 +157,7 @@ def set_starting_lineup(starting_lineup):
         'Referer': 'https://fantasy.premierleague.com/a/team/my'
     }
     result = MY_SESSION.post(constants.SQUAD_URL, headers=starting_lineup_headers, json=starting_lineup)
-    print(result)
-    print(result.text)
+    if result.status_code != 200:
+        print(result)
+        print(result.text)
     return result
