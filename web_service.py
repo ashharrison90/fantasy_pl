@@ -110,6 +110,10 @@ def make_transfers(old_squad, new_squad):
         'wildcard': 'false'
     }
 
+    # We sort the lists by player_type as each transfer must be of the same type
+    players_in = sorted(players_in, key=lambda player: (player['element_type']))
+    players_out = sorted(players_out, key=lambda player: (player['element_type']))
+
     # for each player_in/player_out create a transfer
     for i in range(len(players_in)):
         transfer_object['transfers'].append({
