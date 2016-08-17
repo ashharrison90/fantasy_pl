@@ -84,7 +84,6 @@ def login(username, password):
     }
     result = MY_SESSION.post(constants.LOGIN_URL, headers=login_headers, data=login_data)
     print(result)
-    print(result.text)
 
     # Make a GET request to fantasy.premierleague.com to get the correct cookies
     MY_SESSION.get(constants.FANTASY_URL)
@@ -97,6 +96,7 @@ def make_transfers(old_squad, new_squad):
     """
     Given lists containing the old(/current)_squad and the new_squad, make the necessary transfers.
     """
+    print("Making transfers...")
     # Create our transfers object and players_in/out lists
     new_squad_ids = [player['id'] for player in new_squad]
     old_squad_ids = [player['element'] for player in old_squad]
@@ -119,7 +119,6 @@ def make_transfers(old_squad, new_squad):
             'selling_price': players_out[i]['selling_price']
         })
 
-    print("Transfers:")
     print(transfer_object)
 
     # if we need to make transfers, then do so and return the response object
@@ -133,7 +132,10 @@ def make_transfers(old_squad, new_squad):
             'X-Requested-With': 'XMLHttpRequest',
             'Referer': 'https://fantasy.premierleague.com/a/squad/transfers'
         }
-        return MY_SESSION.post(constants.TRANSFER_URL, headers=transfer_headers, json=transfer_object)
+        result = MY_SESSION.post(constants.TRANSFER_URL, headers=transfer_headers, json=transfer_object)
+        print(result)
+        print(result.text)
+        return result
     else:
         response_success = requests.Response
         response_success.status_code = 200
