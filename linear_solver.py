@@ -75,7 +75,7 @@ def select_squad(current_squad):
 
     # Solve!
     # On the pi, we need to use the GLPK solver.
-    squad_prob.solve(pulp.GLPK_CMD())
+    squad_prob.solve(pulp.GLPK_CMD(msg=0))
 
     for player in all_players:
         if pulp.value(player['selected']) == 1:
@@ -133,7 +133,7 @@ def select_squad_ignore_transfers(bank):
 
     # Solve!
     # On the pi, we need to use the GLPK solver.
-    squad_prob.solve(pulp.GLPK_CMD())
+    squad_prob.solve(pulp.GLPK_CMD(msg=0))
 
     for player in all_players:
         if pulp.value(player['selected']) == 1:
@@ -177,7 +177,7 @@ def select_starting(squad):
 
     # Solve!
     # On the pi, we need to use the GLPK solver.
-    starting_prob.solve(pulp.GLPK_CMD())
+    starting_prob.solve(pulp.GLPK_CMD(msg=0))
     print("Estimated starting points:", pulp.value(starting_points))
 
     counter = 1
@@ -221,9 +221,9 @@ def select_starting(squad):
 
     # Set the captain and vice captain
     for player in starting_lineup['picks']:
-        if player['id'] == captain[0]:
+        if player['element'] == captain[0]:
             player['is_captain'] = 'true'
-        elif player['id'] == vice_captain[0]:
+        elif player['element'] == vice_captain[0]:
             player['is_vice_captain'] = 'true'
 
     return starting_lineup
