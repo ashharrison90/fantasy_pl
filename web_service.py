@@ -115,6 +115,9 @@ def make_transfers(old_squad, new_squad):
             'selling_price': players_out[i]['selling_price']
         })
 
+    print("Transfers:")
+    print(transfer_object)
+
     # if we need to make transfers, then do so and return the response object
     # else return a generic success response (since we didn't need to do anything!)
     if len(transfer_object['transfers']) > 0:
