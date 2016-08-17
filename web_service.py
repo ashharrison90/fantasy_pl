@@ -86,7 +86,8 @@ def login(username, password):
     MY_SESSION.get(constants.FANTASY_URL)
     static_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
     constants.EVENT_NUMBER = static_data['next-event']
-    constants.SQUAD_URL += str(static_data['entry']['id']) + "/"
+    constants.SQUAD_ID = static_data['entry']['id']
+    constants.SQUAD_URL += str(constants.SQUAD_ID) + "/"
 
 def make_transfers(old_squad, new_squad):
     """
