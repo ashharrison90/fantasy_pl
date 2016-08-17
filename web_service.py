@@ -25,6 +25,7 @@ def get_transfers_squad():
     This gives more information about transfers, such as selling price.
     Note: must be logged in first!
     """
+    print("Getting current squad...")
     squad_request_headers = {
         'X-Requested-With': 'XMLHttpRequest'
     }
@@ -65,6 +66,7 @@ def login(username, password):
     """
     Login to the fantasy football web app.
     """
+    print("Logging in...")
     # Make a GET request to users.premierleague.com to get the correct cookies
     MY_SESSION.get(constants.LOGIN_URL)
     csrf_token = MY_SESSION.cookies.get('csrftoken', domain='users.premierleague.com')
@@ -80,7 +82,9 @@ def login(username, password):
     login_headers = {
         'Content-Type': 'application/x-www-form-urlencoded'
     }
-    MY_SESSION.post(constants.LOGIN_URL, headers=login_headers, data=login_data)
+    result = MY_SESSION.post(constants.LOGIN_URL, headers=login_headers, data=login_data)
+    print(result)
+    print(result.text)
 
     # Make a GET request to fantasy.premierleague.com to get the correct cookies
     MY_SESSION.get(constants.FANTASY_URL)
@@ -137,6 +141,7 @@ def make_transfers(old_squad, new_squad):
 
 def set_starting_lineup(starting_lineup):
     # Make a GET request to get the correct cookies
+    "Adjusting starting lineup..."
     MY_SESSION.get(constants.SQUAD_URL)
     csrf_token = MY_SESSION.cookies.get('csrftoken', domain='fantasy.premierleague.com')
     starting_lineup_headers = {
@@ -144,4 +149,7 @@ def set_starting_lineup(starting_lineup):
         'X-Requested-With': 'XMLHttpRequest',
         'Referer': 'https://fantasy.premierleague.com/a/team/my'
     }
-    return MY_SESSION.post(constants.SQUAD_URL, headers=starting_lineup_headers, json=starting_lineup)
+    result = MY_SESSION.post(constants.SQUAD_URL, headers=starting_lineup_headers, json=starting_lineup)
+    print(result)
+    print(result.text)
+    return result

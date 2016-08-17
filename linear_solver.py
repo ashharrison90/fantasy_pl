@@ -13,6 +13,7 @@ def select_squad(current_squad):
     """
     Given the current squad, calculate the best possible squad for next week.
     """
+    print("Calculating optimal squad...")
     # Define and get some necessary constants
     teams_represented = [0] * 20
     new_squad = []
@@ -91,6 +92,7 @@ def select_squad_ignore_transfers(bank):
     """
     Ignoring the current squad, calculate the best possible squad for next week.
     """
+    print("Calculating optimal squad...")
     # Define and get some necessary constants
     teams_represented = [0] * 20
     new_squad = []
@@ -147,6 +149,7 @@ def select_starting(squad):
     """
     Given a squad, select the best possible starting lineup.
     """
+    print("Calculating optimal starting lineup...")
     # Define and get some necessary constants
     starting_points = num_goal_starting = num_def_starting = num_mid_starting = num_att_starting = num_starting = 0
     starting_lineup = {'picks': []}
