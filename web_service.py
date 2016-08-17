@@ -83,7 +83,9 @@ def login(username, password):
         'Content-Type': 'application/x-www-form-urlencoded'
     }
     result = MY_SESSION.post(constants.LOGIN_URL, headers=login_headers, data=login_data)
-    print(result)
+    if result.status_code != 200:
+        print(result)
+        print(result.text)
 
     # Make a GET request to fantasy.premierleague.com to get the correct cookies
     MY_SESSION.get(constants.FANTASY_URL)
@@ -123,11 +125,10 @@ def make_transfers(old_squad, new_squad):
             'selling_price': players_out[i]['selling_price']
         })
 
-    print(transfer_object)
-
     # if we need to make transfers, then do so and return the response object
     # else return a generic success response (since we didn't need to do anything!)
     if len(transfer_object['transfers']) > 0:
+        print(transfer_object)
         MY_SESSION.get('https://fantasy.premierleague.com/a/squad/transfers')
         csrf_token = MY_SESSION.cookies.get('csrftoken', domain='fantasy.premierleague.com')
 
