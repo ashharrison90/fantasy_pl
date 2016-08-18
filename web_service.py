@@ -8,6 +8,10 @@ import constants
 # Create a session - this persists cookies across requests
 MY_SESSION = requests.Session()
 
+def get_deadline():
+    dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
+    return dynamic_data['next_event_fixtures'][0]["deadline_time"]
+
 def get_squad():
     """
     Get the current selected squad from the fantasy football web app.
