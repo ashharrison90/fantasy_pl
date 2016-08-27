@@ -19,9 +19,10 @@ def select_squad(current_squad):
     new_squad = []
     new_squad_points = num_changes = num_goal = num_def = num_mid = num_att = 0
     current_squad_ids = [player['element'] for player in current_squad['picks']]
-    free_transfers = current_squad['helper']['transfers_state']['free']
+    free_transfers = max(0, current_squad['helper']['transfers_state']['free'])
     squad_value = current_squad['helper']['value']
-    bank = squad_value + current_squad['helper']['bank']
+    bank = current_squad['helper']['bank']
+    total_bank = squad_value + bank
 
     # Define the squad linear optimisation problem
     squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
@@ -45,9 +46,13 @@ def select_squad(current_squad):
         elif player_type == 4:
             num_att += player['selected']
         if player['id'] in current_squad_ids:
+            index = current_squad_ids.index(player['id'])
+            selling_price = current_squad['picks'][index]['selling_price']
+            bank += (1 - player['selected']) * selling_price
             squad_value -= (1 - player['selected']) * player['now_cost']
         else:
             num_changes += player['selected']
+            bank -= player['selected'] * player['now_cost']
             squad_value += player['selected'] * player['now_cost']
 
     print("\rPlayer data retrieved!\n")
@@ -65,7 +70,8 @@ def select_squad(current_squad):
     squad_prob += new_squad_points - transfer_cost
     for team_count in teams_represented:
         squad_prob += (team_count <= constants.SQUAD_MAX_PLAYERS_SAME_TEAM)
-    squad_prob += (squad_value <= bank)
+    squad_prob += (squad_value + bank <= total_bank)
+    squad_prob += (bank >= 0)
     squad_prob += (num_goal == constants.SQUAD_NUM_GOALKEEPERS)
     squad_prob += (num_def == constants.SQUAD_NUM_DEFENDERS)
     squad_prob += (num_mid == constants.SQUAD_NUM_MIDFIELDERS)
@@ -74,7 +80,7 @@ def select_squad(current_squad):
 
     # Solve!
     # On the pi, we need to use the GLPK solver.
-    squad_prob.solve(pulp.GLPK_CMD(msg=0))
+    squad_prob.solve()
 
     for player in all_players:
         if pulp.value(player['selected']) == 1:
@@ -83,7 +89,8 @@ def select_squad(current_squad):
     print("Estimated squad points:", pulp.value(new_squad_points))
     print("Number of transfers:", pulp.value(num_changes))
     print("Cost of transfers:", pulp.value(transfer_cost))
-    print("Team value: ", locale.currency(pulp.value(squad_value)), "\n")
+    print("Team value:", locale.currency(pulp.value(squad_value)))
+    print("Bank:", locale.currency(pulp.value(bank)), "\n")
     return new_squad
 
 def select_squad_ignore_transfers(bank):
@@ -178,7 +185,7 @@ def select_starting(squad):
 
     # Solve!
     # On the pi, we need to use the GLPK solver.
-    starting_prob.solve(pulp.GLPK_CMD(msg=0))
+    starting_prob.solve()
     print("Estimated starting points:", pulp.value(starting_points))
 
     # Split the squad into starting lineup and subs
