@@ -45,9 +45,7 @@ def select_squad(current_squad):
         elif player_type == 4:
             num_att += player['selected']
         if player['id'] in current_squad_ids:
-            index = current_squad_ids.index(player['id'])
-            selling_price = current_squad['picks'][index]['selling_price']
-            squad_value -= (1 - player['selected']) * selling_price
+            squad_value -= (1 - player['selected']) * player['now_cost']
         else:
             num_changes += player['selected']
             squad_value += player['selected'] * player['now_cost']

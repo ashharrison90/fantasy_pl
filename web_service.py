@@ -9,6 +9,9 @@ import constants
 MY_SESSION = requests.Session()
 
 def get_deadline():
+    """
+    Get the next deadline for submitting transfers/team choice
+    """
     dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
     return dynamic_data['next_event_fixtures'][0]["deadline_time"]
 
