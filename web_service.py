@@ -114,6 +114,8 @@ def make_transfers(transfer_object):
     """
     Given a transfers object, make the corresponding transfers in the webapp.
     """
+    print('Making transfers...')
+
     # if we need to make transfers, then do so and return the response object
     # else return a generic success response (since we didn't need to do anything!)
     if len(transfer_object['transfers']) > 0:
