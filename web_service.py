@@ -13,18 +13,7 @@ def get_deadline():
     Get the next deadline for submitting transfers/team choice
     """
     dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
-    return dynamic_data['next_event_fixtures'][0]["deadline_time"]
-
-def get_squad():
-    """
-    Get the current selected squad from the fantasy football web app.
-    Note: must be logged in first!
-    """
-    squad_request_headers = {
-        'X-Requested-With': 'XMLHttpRequest'
-    }
-    squad = MY_SESSION.get(constants.SQUAD_URL, headers=squad_request_headers).json()['picks']
-    return squad
+    return dynamic_data['next_event_fixtures'][0]['deadline_time']
 
 def get_transfers_squad():
     """
@@ -32,48 +21,30 @@ def get_transfers_squad():
     This gives more information about transfers, such as selling price.
     Note: must be logged in first!
     """
-    print("Getting current squad...")
+    print('Getting current squad...')
     squad_request_headers = {
         'X-Requested-With': 'XMLHttpRequest'
     }
-    squad = MY_SESSION.get(constants.TRANSFER_URL, headers=squad_request_headers).json()
-    return squad
+    return MY_SESSION.get(constants.TRANSFER_URL, headers=squad_request_headers).json()
 
 def grab_all():
     """
     Grab all the json data from the fantasy api url.
     """
-    return requests.get(constants.FANTASY_API_URL).json()
-
-def grab_player_by_id(player_id):
-    """
-    Grab a single player's json object from the data using their id.
-    """
-    player_array = grab_all()["elements"]
-    for player in player_array:
-        if player["id"] == player_id:
-            return player
-
-def grab_player_by_name(first_name, second_name):
-    """
-    Grab a single player's json object from the data using their name.
-    """
-    player_array = grab_all()["elements"]
-    for player in player_array:
-        if (player["first_name"] == first_name) and (player["second_name"] == second_name):
-            return player
+    return MY_SESSION.get(constants.FANTASY_API_URL).json()
 
 def grab_player_fixtures(player_id):
     """
     Grab a single player's full history and fixture list using their id.
     """
-    return requests.get(constants.FANTASY_PLAYER_API_URL + str(player_id)).json()
+    return MY_SESSION.get(constants.FANTASY_PLAYER_API_URL + str(player_id)).json()
 
 def login(username, password):
     """
     Login to the fantasy football web app.
     """
-    print("Logging in...")
+    print('Logging in...')
+
     # Make a GET request to users.premierleague.com to get the correct cookies
     MY_SESSION.get(constants.LOGIN_URL)
     csrf_token = MY_SESSION.cookies.get('csrftoken', domain='users.premierleague.com')
@@ -86,9 +57,11 @@ def login(username, password):
         'app': 'plusers',
         'redirect_uri': 'https://users.premierleague.com/'
     })
+
     login_headers = {
         'Content-Type': 'application/x-www-form-urlencoded'
     }
+
     result = MY_SESSION.post(constants.LOGIN_URL, headers=login_headers, data=login_data)
     if result.status_code != 200:
         print(result)
@@ -99,14 +72,16 @@ def login(username, password):
     dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
     constants.NEXT_EVENT = dynamic_data['next-event']
     constants.SQUAD_ID = dynamic_data['entry']['id']
-    constants.SQUAD_URL += str(constants.SQUAD_ID) + "/"
-    constants.TRANSFER_DEADLINE = dynamic_data['next_event_fixtures'][0]["deadline_time"]
+    constants.SQUAD_URL += str(constants.SQUAD_ID) + '/'
+    constants.TRANSFER_DEADLINE = dynamic_data['next_event_fixtures'][0]['deadline_time']
 
-def make_transfers(old_squad, new_squad):
+def calculate_transfers(old_squad, new_squad):
     """
-    Given lists containing the old(/current)_squad and the new_squad, make the necessary transfers.
+    Given lists containing the old(/current)_squad and the new_squad,
+    calculate the new transfers object.
     """
-    print("Making transfers...")
+    print('Creating transfers object...')
+
     # Create our transfers object and players_in/out lists
     new_squad_ids = [player['id'] for player in new_squad]
     old_squad_ids = [player['element'] for player in old_squad]
@@ -132,11 +107,16 @@ def make_transfers(old_squad, new_squad):
             'element_out': players_out[i]['element'],
             'selling_price': players_out[i]['selling_price']
         })
+    print(transfer_object)
+    return transfer_object
 
+def make_transfers(transfer_object):
+    """
+    Given a transfers object, make the corresponding transfers in the webapp.
+    """
     # if we need to make transfers, then do so and return the response object
     # else return a generic success response (since we didn't need to do anything!)
     if len(transfer_object['transfers']) > 0:
-        print(transfer_object)
         MY_SESSION.get('https://fantasy.premierleague.com/a/squad/transfers')
         csrf_token = MY_SESSION.cookies.get('csrftoken', domain='fantasy.premierleague.com')
 
@@ -145,7 +125,13 @@ def make_transfers(old_squad, new_squad):
             'X-Requested-With': 'XMLHttpRequest',
             'Referer': 'https://fantasy.premierleague.com/a/squad/transfers'
         }
-        result = MY_SESSION.post(constants.TRANSFER_URL, headers=transfer_headers, json=transfer_object)
+
+        result = MY_SESSION.post(
+            constants.TRANSFER_URL,
+            headers=transfer_headers,
+            json=transfer_object
+        )
+
         if result.status_code != 200:
             print(result)
             print(result.text)
@@ -156,16 +142,27 @@ def make_transfers(old_squad, new_squad):
         return response_success
 
 def set_starting_lineup(starting_lineup):
+    """
+    Set the starting lineup correctly in the webapp.
+    """
+    print('Adjusting starting lineup...')
+
     # Make a GET request to get the correct cookies
-    "Adjusting starting lineup..."
     MY_SESSION.get(constants.SQUAD_URL)
     csrf_token = MY_SESSION.cookies.get('csrftoken', domain='fantasy.premierleague.com')
+
     starting_lineup_headers = {
         'X-CSRFToken': csrf_token,
         'X-Requested-With': 'XMLHttpRequest',
         'Referer': 'https://fantasy.premierleague.com/a/team/my'
     }
-    result = MY_SESSION.post(constants.SQUAD_URL, headers=starting_lineup_headers, json=starting_lineup)
+
+    result = MY_SESSION.post(
+        constants.SQUAD_URL,
+        headers=starting_lineup_headers,
+        json=starting_lineup
+    )
+
     if result.status_code != 200:
         print(result)
         print(result.text)
