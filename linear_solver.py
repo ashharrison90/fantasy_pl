@@ -80,7 +80,7 @@ def select_squad(current_squad):
 
     # Solve!
     # On the pi, we need to use the GLPK solver.
-    squad_prob.solve()
+    squad_prob.solve(pulp.GLPK_CMD(msg=0))
 
     for player in all_players:
         if pulp.value(player['selected']) == 1:
@@ -185,7 +185,7 @@ def select_starting(squad):
 
     # Solve!
     # On the pi, we need to use the GLPK solver.
-    starting_prob.solve()
+    starting_prob.solve(pulp.GLPK_CMD(msg=0))
     print("Estimated starting points:", pulp.value(starting_points))
 
     # Split the squad into starting lineup and subs
