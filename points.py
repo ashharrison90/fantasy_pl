@@ -3,6 +3,7 @@ Functions used to calculate the expected points total for a given player.
 """
 import re
 
+
 def predict_points(json_object, json_fixture_object):
     """
     Given a player's json object, this function attempts to predict
@@ -18,6 +19,7 @@ def predict_points(json_object, json_fixture_object):
     injury_ratio = calculate_injury_multiplier(json_object)
     fixture_ratio = calculate_fixture_multiplier(json_fixture_object)
     return expected_points * injury_ratio * fixture_ratio
+
 
 def calculate_injury_multiplier(json_object):
     """
@@ -38,6 +40,7 @@ def calculate_injury_multiplier(json_object):
         if search_matched:
             injury_ratio = int(search_matched.group(1)) / 100
     return injury_ratio
+
 
 def calculate_fixture_multiplier(json_fixture_object):
     """

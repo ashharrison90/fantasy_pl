@@ -9,6 +9,7 @@ import web_service
 
 locale.setlocale(locale.LC_ALL, '')
 
+
 def select_squad(current_squad):
     """
     Given the current squad, calculate the best possible squad for next week.
@@ -21,7 +22,8 @@ def select_squad(current_squad):
     teams_represented = [0] * 20
     new_squad = []
     new_squad_points = num_changes = num_goal = num_def = num_mid = num_att = 0
-    current_squad_ids = [player['element'] for player in current_squad['picks']]
+    current_squad_ids = [player['element']
+                         for player in current_squad['picks']]
     free_transfers = max(0, current_squad['helper']['transfers_state']['free'])
     squad_value = current_squad['helper']['value']
     bank = current_squad['helper']['bank']
@@ -31,7 +33,8 @@ def select_squad(current_squad):
     all_players = web_service.grab_all()['elements']
     for player in all_players:
         print('\rRetrieving player:', player['id'], end='')
-        player['selected'] = pulp.LpVariable('player_' + str(player['id']), cat='Binary')
+        player['selected'] = pulp.LpVariable(
+            'player_' + str(player['id']), cat='Binary')
         fixture_data = web_service.grab_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points(player, fixture_data)
         teams_represented[player['team'] - 1] += player['selected']
@@ -66,7 +69,8 @@ def select_squad(current_squad):
         lowBound=0,
         upBound=free_transfers
     )
-    transfer_cost = ((num_changes - free_transfers_used) * constants.TRANSFER_POINT_DEDUCTION)
+    transfer_cost = ((num_changes - free_transfers_used)
+                     * constants.TRANSFER_POINT_DEDUCTION)
 
     # Add problem and constraints
     squad_prob += new_squad_points - transfer_cost
@@ -95,6 +99,7 @@ def select_squad(current_squad):
 
     return new_squad
 
+
 def select_squad_ignore_transfers(bank):
     """
     Ignoring the current squad, calculate the best possible squad for next week.
@@ -112,7 +117,8 @@ def select_squad_ignore_transfers(bank):
     all_players = web_service.grab_all()['elements']
     for player in all_players:
         print('\rRetrieving player:', player['id'], end='')
-        player['selected'] = pulp.LpVariable('player_' + player['id'], cat='Binary')
+        player['selected'] = pulp.LpVariable(
+            'player_' + player['id'], cat='Binary')
         fixture_data = web_service.grab_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points(player, fixture_data)
         teams_represented[player['team'] - 1] += player['selected']
@@ -153,6 +159,7 @@ def select_squad_ignore_transfers(bank):
 
     return new_squad
 
+
 def select_starting(squad):
     """
     Given a squad, select the best possible starting lineup.
@@ -166,7 +173,8 @@ def select_starting(squad):
     starting_lineup = {'picks': []}
 
     for player in squad:
-        player['starting'] = pulp.LpVariable('player_' + str(player['id']) + '_starting', cat='Binary')
+        player['starting'] = pulp.LpVariable(
+            'player_' + str(player['id']) + '_starting', cat='Binary')
         player_type = player['element_type']
         num_starting += player['starting']
         starting_points += player['starting'] * player['expected_points']
@@ -193,17 +201,22 @@ def select_starting(squad):
     print('Estimated starting points:', pulp.value(starting_points))
 
     # Split the squad into starting lineup and subs
-    starting_list = [player for player in squad if pulp.value(player['starting']) == 1]
-    subs_list = [player for player in squad if pulp.value(player['starting']) == 0]
+    starting_list = [player for player in squad if pulp.value(
+        player['starting']) == 1]
+    subs_list = [player for player in squad if pulp.value(
+        player['starting']) == 0]
 
-    # First sort the starting lineup by expected points to give us the captain and vice captain
-    starting_list = sorted(starting_list, key=lambda player: -player['expected_points'])
+    # First sort the starting lineup by expected points to give us the captain
+    # and vice captain
+    starting_list = sorted(
+        starting_list, key=lambda player: -player['expected_points'])
     captain_id = starting_list[0]['id']
     vice_captain_id = starting_list[1]['id']
 
     # Now sort the starting lineup by element type
     # This will allow us to give each player the correct position
-    starting_list = sorted(starting_list, key=lambda player: player['element_type'])
+    starting_list = sorted(
+        starting_list, key=lambda player: player['element_type'])
     for player in starting_list:
         starting_lineup['picks'].append({
             'element': player['id'],
@@ -231,7 +244,8 @@ def select_starting(squad):
     # Sort the subs by expected points.
     # We want the subs expected to score the most points ordered first.
     sub_counter = 13
-    subs_list = sorted(subs_list, key=lambda player: -player['expected_points'])
+    subs_list = sorted(subs_list, key=lambda player: -
+                       player['expected_points'])
     for player in subs_list:
         print(
             '-',
