@@ -2,6 +2,7 @@
 Some useful constants for the fantasy premier league
 """
 # URLs needed
+CLUB_ELO_URL = 'http://api.clubelo.com/'
 FANTASY_URL = 'https://fantasy.premierleague.com'
 FANTASY_API_URL = 'https://fantasy.premierleague.com/drf/bootstrap-static'
 FANTASY_API_DYNAMIC_URL = 'https://fantasy.premierleague.com/drf/bootstrap-dynamic'
@@ -14,6 +15,7 @@ TRANSFER_URL = 'https://fantasy.premierleague.com/drf/transfers'
 NEXT_EVENT = None
 SQUAD_ID = None
 TRANSFER_DEADLINE = None
+CLUB_ELO_RATINGS = {}
 
 # Constraints
 STARTING_MIN_ATTACKERS = 1

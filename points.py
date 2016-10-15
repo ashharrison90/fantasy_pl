@@ -2,13 +2,13 @@
 Functions used to calculate the expected points total for a given player.
 """
 import re
+import constants
 
 
 def predict_points(json_object, json_fixture_object):
     """
     Given a player's json object, this function attempts to predict
     how many points a given player will score in the next gameweek.
-    See example.json for a player's json object.
     """
     form = json_object["form"]
     ppg = json_object["points_per_game"]
@@ -17,7 +17,8 @@ def predict_points(json_object, json_fixture_object):
     else:
         expected_points = float(ppg)
     injury_ratio = calculate_injury_multiplier(json_object)
-    fixture_ratio = calculate_fixture_multiplier(json_fixture_object)
+    fixture_ratio = calculate_fixture_multiplier(
+        json_object, json_fixture_object)
     return expected_points * injury_ratio * fixture_ratio
 
 
@@ -42,18 +43,18 @@ def calculate_injury_multiplier(json_object):
     return injury_ratio
 
 
-def calculate_fixture_multiplier(json_fixture_object):
+def calculate_fixture_multiplier(json_object, json_fixture_object):
     """
     Given a player's json fixture object, calculate a fixture multiplier for
-    the expected points. For example, if a player has an easier game (e.g. home
-    to Mboro), 'difficulty' would be 1, which we convert to a multiplier which is
-    applied to the expected points total.
+    the expected points. This is calculated using each club's Elo rating.
     """
     next_match = json_fixture_object["fixtures_summary"][0]
-    difficulty = next_match["difficulty"]
-    # difficulty is 1-5, 5 being the hardest
-    # we convert this to a ratio adjustment as follows:
-    #    1    2  3    4    5
-    # +0.2 +0.1 +0 -0.1 -0.2
-    normalised_adjustment = (3 - difficulty) / 10
-    return 1 + normalised_adjustment
+    team_id = json_object['team']
+    opposition_team_id = next_match['team_a'] if next_match[
+        'is_home'] else next_match['team_h']
+
+    team_elo = constants.CLUB_ELO_RATINGS[team_id]
+    opposition_team_elo = constants.CLUB_ELO_RATINGS[opposition_team_id]
+
+    normalised_adjustment = team_elo / opposition_team_elo
+    return normalised_adjustment

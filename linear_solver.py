@@ -30,12 +30,12 @@ def select_squad(current_squad):
     total_bank = squad_value + bank
 
     # Loop through every player and add them to the constraints
-    all_players = web_service.grab_all()['elements']
+    all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
         print('\rRetrieving player:', player['id'], end='')
         player['selected'] = pulp.LpVariable(
             'player_' + str(player['id']), cat='Binary')
-        fixture_data = web_service.grab_player_fixtures(player['id'])
+        fixture_data = web_service.get_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points(player, fixture_data)
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
@@ -114,12 +114,12 @@ def select_squad_ignore_transfers(bank):
     new_squad_points = squad_value = num_goal = num_def = num_mid = num_att = 0
 
     # Loop through every player and add them to the constraints
-    all_players = web_service.grab_all()['elements']
+    all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
         print('\rRetrieving player:', player['id'], end='')
         player['selected'] = pulp.LpVariable(
             'player_' + player['id'], cat='Binary')
-        fixture_data = web_service.grab_player_fixtures(player['id'])
+        fixture_data = web_service.get_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points(player, fixture_data)
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']

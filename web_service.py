@@ -1,7 +1,10 @@
 """
 Functions to manage CRUD operations on fantasy.premierleague.com.
 """
-import urllib.parse
+import codecs
+import csv
+import datetime
+import urllib
 import requests
 import constants
 
@@ -30,14 +33,14 @@ def get_transfers_squad():
     return MY_SESSION.get(constants.TRANSFER_URL, headers=squad_request_headers).json()
 
 
-def grab_all():
+def get_all_player_data():
     """
     Grab all the json data from the fantasy api url.
     """
     return MY_SESSION.get(constants.FANTASY_API_URL).json()
 
 
-def grab_player_fixtures(player_id):
+def get_player_fixtures(player_id):
     """
     Grab a single player's full history and fixture list using their id.
     """
@@ -85,7 +88,7 @@ def login(username, password):
         'next_event_fixtures'][0]['deadline_time']
 
 
-def calculate_transfers(old_squad, new_squad):
+def create_transfers_object(old_squad, new_squad):
     """
     Given lists containing the old(/current)_squad and the new_squad,
     calculate the new transfers object.
@@ -187,3 +190,39 @@ def set_starting_lineup(starting_lineup):
         print(result)
         print(result.text)
     return result
+
+
+def get_club_elo_ratings():
+    """
+    Get Elo ratings for all clubs as of the current date.
+    We will use these to calculate a fixture multiplier.
+    """
+    print('Getting Elo ratings...')
+    results_dict = {}
+
+    # Get data for all teams.
+    team_data = MY_SESSION.get(constants.FANTASY_API_URL).json()['teams']
+
+    # Get Elo data for today's date.
+    date_string = datetime.datetime.now().strftime('%Y-%m-%d')
+    elo_data = urllib.request.urlopen(constants.CLUB_ELO_URL + date_string)
+    parsed_elo_data = csv.reader(codecs.iterdecode(elo_data, 'utf-8'))
+
+    # Loop through the Elo data. When we find a premier league team,
+    # add it's ID and Elo to the results dictionary.
+    for line in parsed_elo_data:
+        if len(line) > 5:
+            elo_rating = line[4]
+            # Need to fix some of the names from the Elo website.
+            if line[1] == 'Tottenham':
+                club_name = 'Spurs'
+            elif line[1] == 'Man United':
+                club_name = 'Man Utd'
+            else:
+                club_name = line[1]
+
+            for team in team_data:
+                if team['name'] == club_name:
+                    results_dict[team['id']] = float(elo_rating)
+
+    return results_dict

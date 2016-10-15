@@ -8,8 +8,13 @@ The main program.
     6. Update the starting lineup on fantasy.premierleague.com.
 """
 import sys
+import constants
 import linear_solver
 import web_service
+
+# Get Elo data for clubs and save it to the constants
+# This will be a dictionary of team ids and corresponding Elo ratings
+constants.CLUB_ELO_RATINGS = web_service.get_club_elo_ratings()
 
 # Login
 USERNAME = sys.argv[1]
@@ -23,7 +28,7 @@ CURRENT_SQUAD = web_service.get_transfers_squad()
 NEW_SQUAD = linear_solver.select_squad(CURRENT_SQUAD)
 
 # make transfers to update the squad on fantasy.premierleague.com
-TRANSFER_OBJECT = web_service.calculate_transfers(
+TRANSFER_OBJECT = web_service.create_transfers_object(
     CURRENT_SQUAD['picks'], NEW_SQUAD)
 web_service.make_transfers(TRANSFER_OBJECT)
 
