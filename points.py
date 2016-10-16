@@ -9,16 +9,16 @@ def predict_points(json_object, json_fixture_object):
     """
     Given a player's json object, this function attempts to predict
     how many points a given player will score in the next gameweek.
+    We use the lowest out of 'form' and 'points_per_game' - this should
+    make the bot more conservative with transfers.
     """
-    form = json_object["form"]
-    ppg = json_object["points_per_game"]
-    if form != "0.0":
-        expected_points = float(form)
-    else:
-        expected_points = float(ppg)
+    form = float(json_object["form"])
+    ppg = float(json_object["points_per_game"])
+    expected_points = form if form < ppg else ppg
     injury_ratio = calculate_injury_multiplier(json_object)
     fixture_ratio = calculate_fixture_multiplier(
         json_object, json_fixture_object)
+    print("  ", expected_points*injury_ratio*fixture_ratio)
     return expected_points * injury_ratio * fixture_ratio
 
 
