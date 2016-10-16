@@ -18,7 +18,6 @@ def predict_points(json_object, json_fixture_object):
     injury_ratio = calculate_injury_multiplier(json_object)
     fixture_ratio = calculate_fixture_multiplier(
         json_object, json_fixture_object)
-    print("  ", expected_points*injury_ratio*fixture_ratio)
     return expected_points * injury_ratio * fixture_ratio
 
 
