@@ -7,10 +7,19 @@ The main program.
     5. Calculate the best possible starting lineup for next week.
     6. Update the starting lineup on fantasy.premierleague.com.
 """
+import codecs
 import sys
 import constants
 import linear_solver
 import web_service
+
+# Use a StreamWriter to output in UTF-8 else some of the logs can cause errors
+# This may result in some characters not rendering correctly in Windows cmd Window
+# http://stackoverflow.com/questions/16346914/python-3-2-unicodeencodeerror-charmap-codec-cant-encode-character-u2013-i
+if sys.stdout.encoding != 'UTF-8':
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+if sys.stderr.encoding != 'UTF-8':
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
 # Get Elo data for clubs and save it to the constants
 # This will be a dictionary of team ids and corresponding Elo ratings
