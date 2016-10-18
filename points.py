@@ -14,7 +14,7 @@ def predict_points(json_object, json_fixture_object):
     make the bot more conservative with transfers.
     """
     print('#predict_points({}..., {}...)'.format(json.dumps(json_object)
-                                           [:100], json.dumps(json_fixture_object)[:100]))
+                                                 [:100], json.dumps(json_fixture_object)[:100]))
     form = float(json_object["form"])
     ppg = float(json_object["points_per_game"])
     expected_points = form if form < ppg else ppg

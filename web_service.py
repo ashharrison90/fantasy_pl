@@ -34,7 +34,8 @@ def get_transfers_squad():
     squad_request_headers = {
         'X-Requested-With': 'XMLHttpRequest'
     }
-    result = MY_SESSION.get(constants.TRANSFER_URL, headers=squad_request_headers).json()
+    result = MY_SESSION.get(constants.TRANSFER_URL,
+                            headers=squad_request_headers).json()
     print('#get_transfers_squad returning: ', result)
     return result
 
@@ -54,7 +55,8 @@ def get_player_fixtures(player_id):
     Grab a single player's full history and fixture list using their id.
     """
     print('#get_player_fixtures({})'.format(player_id))
-    result = MY_SESSION.get(constants.FANTASY_PLAYER_API_URL + str(player_id)).json()
+    result = MY_SESSION.get(
+        constants.FANTASY_PLAYER_API_URL + str(player_id)).json()
     print('#get_player_fixtures returning: ', json.dumps(result)[:100], '...')
     return result
 
