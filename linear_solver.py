@@ -34,10 +34,10 @@ def select_squad(current_squad):
     # Loop through every player and add them to the constraints
     all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
-        player['selected'] = pulp.LpVariable(
-            'player_' + str(player['id']), cat='Binary')
         fixture_data = web_service.get_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points(player, fixture_data)
+        player['selected'] = pulp.LpVariable(
+            'player_' + str(player['id']), cat='Binary')
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
         new_squad_points += player['selected'] * player['expected_points']

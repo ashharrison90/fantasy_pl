@@ -1,6 +1,7 @@
 """
 Functions used to calculate the expected points total for a given player.
 """
+import json
 import re
 import constants
 
@@ -12,7 +13,8 @@ def predict_points(json_object, json_fixture_object):
     We use the lowest out of 'form' and 'points_per_game' - this should
     make the bot more conservative with transfers.
     """
-    print('#predict_points({}, {})'.format(json_object, json_fixture_object))
+    print('#predict_points({}..., {}...)'.format(json.dumps(json_object)
+                                           [:100], json.dumps(json_fixture_object)[:100]))
     form = float(json_object["form"])
     ppg = float(json_object["points_per_game"])
     expected_points = form if form < ppg else ppg
@@ -31,7 +33,8 @@ def calculate_injury_multiplier(json_object):
     is expected to score 10 points, but is only 50% likely to play, the expected points
     are adjusted to 10*0.5 = 5
     """
-    print('#calculate_injury_multiplier({})'.format(json_object))
+    print('#calculate_injury_multiplier({}...)'.format(
+        json.dumps(json_object)[:100]))
     status = json_object["status"]
     injury_ratio = 1
     if status == "a":
@@ -52,7 +55,8 @@ def calculate_fixture_multiplier(json_object, json_fixture_object):
     Given a player's json fixture object, calculate a fixture multiplier for
     the expected points. This is calculated using each club's Elo rating.
     """
-    print('#calculate_fixture_multiplier({}, {})'.format(json_object, json_fixture_object))
+    print('#calculate_fixture_multiplier({}..., {}...)'.format(
+        json.dumps(json_object)[:100], json.dumps(json_fixture_object)[:100]))
     next_match = json_fixture_object["fixtures_summary"][0]
     team_id = json_object['team']
     opposition_team_id = next_match['team_a'] if next_match[

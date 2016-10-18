@@ -4,6 +4,7 @@ Functions to manage CRUD operations on fantasy.premierleague.com.
 import codecs
 import csv
 import datetime
+import json
 import urllib
 import requests
 import constants
@@ -44,7 +45,7 @@ def get_all_player_data():
     """
     print('#get_all_player_data()')
     result = MY_SESSION.get(constants.FANTASY_API_URL).json()
-    print('#get_all_player_data returning: ', result)
+    print('#get_all_player_data returning: ', json.dumps(result)[:100], '...')
     return result
 
 
@@ -54,7 +55,7 @@ def get_player_fixtures(player_id):
     """
     print('#get_player_fixtures({})'.format(player_id))
     result = MY_SESSION.get(constants.FANTASY_PLAYER_API_URL + str(player_id)).json()
-    print('#get_player_fixtures returning: ', result)
+    print('#get_player_fixtures returning: ', json.dumps(result)[:100], '...')
     return result
 
 
