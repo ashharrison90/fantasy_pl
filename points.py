@@ -12,13 +12,16 @@ def predict_points(json_object, json_fixture_object):
     We use the lowest out of 'form' and 'points_per_game' - this should
     make the bot more conservative with transfers.
     """
+    print('#predict_points({}, {})'.format(json_object, json_fixture_object))
     form = float(json_object["form"])
     ppg = float(json_object["points_per_game"])
     expected_points = form if form < ppg else ppg
     injury_ratio = calculate_injury_multiplier(json_object)
     fixture_ratio = calculate_fixture_multiplier(
         json_object, json_fixture_object)
-    return expected_points * injury_ratio * fixture_ratio
+    result = expected_points * injury_ratio * fixture_ratio
+    print('#predict_points returning: ', result)
+    return result
 
 
 def calculate_injury_multiplier(json_object):
@@ -28,6 +31,7 @@ def calculate_injury_multiplier(json_object):
     is expected to score 10 points, but is only 50% likely to play, the expected points
     are adjusted to 10*0.5 = 5
     """
+    print('#calculate_injury_multiplier({})'.format(json_object))
     status = json_object["status"]
     injury_ratio = 1
     if status == "a":
@@ -39,6 +43,7 @@ def calculate_injury_multiplier(json_object):
         search_matched = re.search('.*\\s([\\d]+)\\%\\s.*', news)
         if search_matched:
             injury_ratio = int(search_matched.group(1)) / 100
+    print('#calculate_injury_multiplier returning: ', injury_ratio)
     return injury_ratio
 
 
@@ -47,6 +52,7 @@ def calculate_fixture_multiplier(json_object, json_fixture_object):
     Given a player's json fixture object, calculate a fixture multiplier for
     the expected points. This is calculated using each club's Elo rating.
     """
+    print('#calculate_fixture_multiplier({}, {})'.format(json_object, json_fixture_object))
     next_match = json_fixture_object["fixtures_summary"][0]
     team_id = json_object['team']
     opposition_team_id = next_match['team_a'] if next_match[
@@ -56,4 +62,5 @@ def calculate_fixture_multiplier(json_object, json_fixture_object):
     opposition_team_elo = constants.CLUB_ELO_RATINGS[opposition_team_id]
 
     normalised_adjustment = team_elo / opposition_team_elo
+    print('#calculate_fixture_multiplier returning: ', normalised_adjustment)
     return normalised_adjustment

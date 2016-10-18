@@ -2,6 +2,7 @@
 Functions needed to solve the linear optimisation problem
 """
 import locale
+import platform
 import constants
 import points
 import pulp
@@ -14,9 +15,10 @@ def select_squad(current_squad):
     """
     Given the current squad, calculate the best possible squad for next week.
     """
+    print('#select_squad({})'.format(current_squad))
+
     # Define the squad linear optimisation problem
     squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
-    print('Calculating optimal squad...')
 
     # Define and get some necessary constants
     teams_represented = [0] * 20
@@ -32,7 +34,6 @@ def select_squad(current_squad):
     # Loop through every player and add them to the constraints
     all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
-        print('\rRetrieving player:', player['id'], end='')
         player['selected'] = pulp.LpVariable(
             'player_' + str(player['id']), cat='Binary')
         fixture_data = web_service.get_player_fixtures(player['id'])
@@ -60,8 +61,6 @@ def select_squad(current_squad):
             bank -= player['selected'] * player['now_cost']
             squad_value += player['selected'] * player['now_cost']
 
-    print('\rPlayer data retrieved!\n')
-
     # Account for free transfers and cost transfers
     free_transfers_used = pulp.LpVariable(
         'free_transfers_used',
@@ -85,7 +84,10 @@ def select_squad(current_squad):
     squad_prob += (num_changes - free_transfers_used >= 0)
 
     # Solve! On the pi, we need to use the GLPK solver.
-    squad_prob.solve(pulp.GLPK_CMD(msg=0))
+    if platform.system() == 'Linux':
+        squad_prob.solve(pulp.GLPK_CMD(msg=0))
+    else:
+        squad_prob.solve()
 
     for player in all_players:
         if pulp.value(player['selected']) == 1:
@@ -97,6 +99,7 @@ def select_squad(current_squad):
     print('Team value:', locale.currency(pulp.value(squad_value)))
     print('Bank:', locale.currency(pulp.value(bank)), '\n')
 
+    print('#select_squad returning: ', new_squad)
     return new_squad
 
 
@@ -104,9 +107,10 @@ def select_squad_ignore_transfers(bank):
     """
     Ignoring the current squad, calculate the best possible squad for next week.
     """
+    print('#select_squad_ignore_transfers({})'.format(bank))
+
     # Define the squad linear optimisation problem
     squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
-    print('Calculating optimal squad...')
 
     # Define and get some necessary constants
     teams_represented = [0] * 20
@@ -116,7 +120,6 @@ def select_squad_ignore_transfers(bank):
     # Loop through every player and add them to the constraints
     all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
-        print('\rRetrieving player:', player['id'], end='')
         player['selected'] = pulp.LpVariable(
             'player_' + player['id'], cat='Binary')
         fixture_data = web_service.get_player_fixtures(player['id'])
@@ -135,8 +138,6 @@ def select_squad_ignore_transfers(bank):
         elif player_type == 4:
             num_att += player['selected']
 
-    print('\rPlayer data retrieved!\n')
-
     # Add problem and constraints
     squad_prob += new_squad_points
     for team_count in teams_represented:
@@ -148,7 +149,10 @@ def select_squad_ignore_transfers(bank):
     squad_prob += (num_att == constants.SQUAD_NUM_ATTACKERS)
 
     # Solve! On the pi, we need to use the GLPK solver.
-    squad_prob.solve(pulp.GLPK_CMD(msg=0))
+    if platform.system() == 'Linux':
+        squad_prob.solve(pulp.GLPK_CMD(msg=0))
+    else:
+        squad_prob.solve()
 
     for player in all_players:
         if pulp.value(player['selected']) == 1:
@@ -157,6 +161,7 @@ def select_squad_ignore_transfers(bank):
     print('Estimated squad points:', pulp.value(new_squad_points))
     print('Team value: ', locale.currency(pulp.value(squad_value)), '\n')
 
+    print('#select_squad_ignore_transfers returning: ', new_squad)
     return new_squad
 
 
@@ -164,9 +169,10 @@ def select_starting(squad):
     """
     Given a squad, select the best possible starting lineup.
     """
+    print('#select_starting({})'.format(squad))
+
     # Define the starting lineup linear optimisation problem
     starting_prob = pulp.LpProblem('Starting line up points', pulp.LpMaximize)
-    print('Calculating optimal starting lineup...')
 
     # Define and get some necessary constants
     starting_points = num_goal_starting = num_def_starting = num_mid_starting = num_att_starting = num_starting = 0
@@ -197,7 +203,10 @@ def select_starting(squad):
     starting_prob += (num_starting == constants.STARTING_SIZE)
 
     # Solve! On the pi, we need to use the GLPK solver.
-    starting_prob.solve(pulp.GLPK_CMD(msg=0))
+    if platform.system() == 'Linux':
+        starting_prob.solve(pulp.GLPK_CMD(msg=0))
+    else:
+        starting_prob.solve()
     print('Estimated starting points:', pulp.value(starting_points))
 
     # Split the squad into starting lineup and subs
@@ -269,4 +278,5 @@ def select_starting(squad):
         else:
             sub_counter += 1
 
+    print('#select_starting returning: ', starting_lineup)
     return starting_lineup

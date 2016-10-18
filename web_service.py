@@ -16,8 +16,11 @@ def get_deadline():
     """
     Get the next deadline for submitting transfers/team choice
     """
+    print('#get_deadline()')
     dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
-    return dynamic_data['next_event_fixtures'][0]['deadline_time']
+    result = dynamic_data['next_event_fixtures'][0]['deadline_time']
+    print('#get_deadline returning: ', result)
+    return result
 
 
 def get_transfers_squad():
@@ -26,32 +29,40 @@ def get_transfers_squad():
     This gives more information about transfers, such as selling price.
     Note: must be logged in first!
     """
-    print('Getting current squad...')
+    print('#get_transfers_squad()')
     squad_request_headers = {
         'X-Requested-With': 'XMLHttpRequest'
     }
-    return MY_SESSION.get(constants.TRANSFER_URL, headers=squad_request_headers).json()
+    result = MY_SESSION.get(constants.TRANSFER_URL, headers=squad_request_headers).json()
+    print('#get_transfers_squad returning: ', result)
+    return result
 
 
 def get_all_player_data():
     """
     Grab all the json data from the fantasy api url.
     """
-    return MY_SESSION.get(constants.FANTASY_API_URL).json()
+    print('#get_all_player_data()')
+    result = MY_SESSION.get(constants.FANTASY_API_URL).json()
+    print('#get_all_player_data returning: ', result)
+    return result
 
 
 def get_player_fixtures(player_id):
     """
     Grab a single player's full history and fixture list using their id.
     """
-    return MY_SESSION.get(constants.FANTASY_PLAYER_API_URL + str(player_id)).json()
+    print('#get_player_fixtures({})'.format(player_id))
+    result = MY_SESSION.get(constants.FANTASY_PLAYER_API_URL + str(player_id)).json()
+    print('#get_player_fixtures returning: ', result)
+    return result
 
 
 def login(username, password):
     """
     Login to the fantasy football web app.
     """
-    print('Logging in...')
+    print('#login({}, {})'.format(username, password))
 
     # Make a GET request to users.premierleague.com to get the correct cookies
     MY_SESSION.get(constants.LOGIN_URL)
@@ -74,8 +85,8 @@ def login(username, password):
     result = MY_SESSION.post(
         constants.LOGIN_URL, headers=login_headers, data=login_data)
     if result.status_code != 200:
-        print(result)
-        print(result.text)
+        print('Error logging in: ', result)
+        print('Error logging in: ', result.text)
 
     # Make a GET request to fantasy.premierleague.com to get the correct
     # cookies
@@ -93,7 +104,7 @@ def create_transfers_object(old_squad, new_squad):
     Given lists containing the old(/current)_squad and the new_squad,
     calculate the new transfers object.
     """
-    print('Creating transfers object...')
+    print('#create_transfers_object({}, {})'.format(old_squad, new_squad))
 
     # Create our transfers object and players_in/out lists
     new_squad_ids = [player['id'] for player in new_squad]
@@ -123,7 +134,7 @@ def create_transfers_object(old_squad, new_squad):
             'element_out': players_out[i]['element'],
             'selling_price': players_out[i]['selling_price']
         })
-    print(transfer_object)
+    print('#create_transfer_object returning: ', transfer_object)
     return transfer_object
 
 
@@ -131,7 +142,7 @@ def make_transfers(transfer_object):
     """
     Given a transfers object, make the corresponding transfers in the webapp.
     """
-    print('Making transfers...')
+    print('#make_transfers({})'.format(transfer_object))
 
     # if we need to make transfers, then do so and return the response object
     # else return a generic success response (since we didn't need to do
@@ -154,20 +165,21 @@ def make_transfers(transfer_object):
         )
 
         if result.status_code != 200:
-            print(result)
-            print(result.text)
-        return result
+            print('Error making transfers: ', result)
+            print('Error making transfers: ', result.text)
     else:
         response_success = requests.Response
         response_success.status_code = 200
-        return response_success
+        result = response_success
+    print('#make_transfers returning: ', result)
+    return result
 
 
 def set_starting_lineup(starting_lineup):
     """
     Set the starting lineup correctly in the webapp.
     """
-    print('Adjusting starting lineup...')
+    print('#set_starting_lineup({})'.format(starting_lineup))
 
     # Make a GET request to get the correct cookies
     MY_SESSION.get(constants.SQUAD_URL)
@@ -187,8 +199,9 @@ def set_starting_lineup(starting_lineup):
     )
 
     if result.status_code != 200:
-        print(result)
-        print(result.text)
+        print('Error setting starting lineup: ', result)
+        print('Error setting starting lineup: ', result.text)
+    print('#set_starting_lineup returning: ', result)
     return result
 
 
@@ -197,7 +210,7 @@ def get_club_elo_ratings():
     Get Elo ratings for all clubs as of the current date.
     We will use these to calculate a fixture multiplier.
     """
-    print('Getting Elo ratings...')
+    print('#get_club_elo_ratings()')
     results_dict = {}
 
     # Get data for all teams.
@@ -224,5 +237,5 @@ def get_club_elo_ratings():
             for team in team_data:
                 if team['name'] == club_name:
                     results_dict[team['id']] = float(elo_rating)
-
+    print('#get_club_elo_ratings returning: ', results_dict)
     return results_dict
