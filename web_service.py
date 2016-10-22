@@ -17,10 +17,8 @@ def get_deadline():
     """
     Get the next deadline for submitting transfers/team choice
     """
-    print('#get_deadline()')
     dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
     result = dynamic_data['next_event_fixtures'][0]['deadline_time']
-    print('#get_deadline returning: ', result)
     return result
 
 
