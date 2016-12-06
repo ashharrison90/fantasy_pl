@@ -14,7 +14,7 @@ import linear_solver
 import web_service
 
 # Use a StreamWriter to output in UTF-8 else some of the logs can cause errors
-# This may result in some characters not rendering correctly in Windows cmd Window
+# This may result in some characters not rendering correctly in Windows cmd window
 # http://stackoverflow.com/questions/16346914/python-3-2-unicodeencodeerror-charmap-codec-cant-encode-character-u2013-i
 if sys.stdout.encoding != 'UTF-8':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')

@@ -35,7 +35,8 @@ def select_squad(current_squad):
     all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
         fixture_data = web_service.get_player_fixtures(player['id'])
-        player['expected_points'] = points.predict_points(player, fixture_data)
+        player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
+        player['expected_points_this_gameweek'] = points.predict_points(player, fixture_data)
         player['selected'] = pulp.LpVariable(
             'player_' + str(player['id']), cat='Binary')
         teams_represented[player['team'] - 1] += player['selected']
@@ -120,10 +121,11 @@ def select_squad_ignore_transfers(bank):
     # Loop through every player and add them to the constraints
     all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
-        player['selected'] = pulp.LpVariable(
-            'player_' + player['id'], cat='Binary')
         fixture_data = web_service.get_player_fixtures(player['id'])
-        player['expected_points'] = points.predict_points(player, fixture_data)
+        player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
+        player['expected_points_this_gameweek'] = points.predict_points(player, fixture_data)
+        player['selected'] = pulp.LpVariable(
+            'player_' + str(player['id']), cat='Binary')
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
         new_squad_points += player['selected'] * player['expected_points']
@@ -183,7 +185,7 @@ def select_starting(squad):
             'player_' + str(player['id']) + '_starting', cat='Binary')
         player_type = player['element_type']
         num_starting += player['starting']
-        starting_points += player['starting'] * player['expected_points']
+        starting_points += player['starting'] * player['expected_points_this_gameweek']
 
         if player_type == 1:
             num_goal_starting += player['starting']
@@ -242,6 +244,7 @@ def select_starting(squad):
         else:
             print('X', end=' ')
         print(
+            player['expected_points_this_gameweek'],
             player['expected_points'],
             player['id'],
             player['first_name'],
@@ -258,6 +261,7 @@ def select_starting(squad):
     for player in subs_list:
         print(
             '-',
+            player['expected_points_this_gameweek'],
             player['expected_points'],
             player['id'],
             player['first_name'],
