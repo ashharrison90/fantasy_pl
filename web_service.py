@@ -100,12 +100,12 @@ def login(username, password):
         'next_event_fixtures'][0]['deadline_time']
 
 
-def create_transfers_object(old_squad, new_squad):
+def create_transfers_object(old_squad, new_squad, use_wildcard=False):
     """
     Given lists containing the old(/current)_squad and the new_squad,
     calculate the new transfers object.
     """
-    print('#create_transfers_object({}, {})'.format(old_squad, new_squad))
+    print('#create_transfers_object({}, {}, {})'.format(old_squad, new_squad, use_wildcard))
 
     # Create our transfers object and players_in/out lists
     new_squad_ids = [player['id'] for player in new_squad]
@@ -119,7 +119,7 @@ def create_transfers_object(old_squad, new_squad):
         'entry': constants.SQUAD_ID,
         'event': constants.NEXT_EVENT,
         'transfers': [],
-        'wildcard': 'false'
+        'wildcard': 'true' if use_wildcard else 'false'
     }
 
     # We sort the players_in list by player_type as each transfer must be of the same type

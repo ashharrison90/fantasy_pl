@@ -11,6 +11,9 @@ LOGIN_URL = 'https://users.premierleague.com/accounts/login/'
 SQUAD_URL = 'https://fantasy.premierleague.com/drf/my-team/'
 TRANSFER_URL = 'https://fantasy.premierleague.com/drf/transfers'
 
+# Other constants
+NUM_CHANGES = 0
+
 # Data we grab from the web services
 NEXT_EVENT = None
 SQUAD_ID = None

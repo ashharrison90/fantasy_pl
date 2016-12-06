@@ -100,6 +100,8 @@ def select_squad(current_squad):
     print('Team value:', locale.currency(pulp.value(squad_value)))
     print('Bank:', locale.currency(pulp.value(bank)), '\n')
 
+    constants.NUM_CHANGES = pulp.value(num_changes)
+
     print('#select_squad returning: ', new_squad)
     return new_squad
 

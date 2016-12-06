@@ -37,8 +37,9 @@ CURRENT_SQUAD = web_service.get_transfers_squad()
 NEW_SQUAD = linear_solver.select_squad(CURRENT_SQUAD)
 
 # make transfers to update the squad on fantasy.premierleague.com
+WILDCARD_STATUS = (CURRENT_SQUAD['helper']['wildcard_status'] == 'available')
 TRANSFER_OBJECT = web_service.create_transfers_object(
-    CURRENT_SQUAD['picks'], NEW_SQUAD)
+    CURRENT_SQUAD['picks'], NEW_SQUAD, (constants.NUM_CHANGES >= 6) and WILDCARD_STATUS)
 web_service.make_transfers(TRANSFER_OBJECT)
 
 # Calculate the new starting lineup
