@@ -14,7 +14,6 @@ def predict_points_multiple_gameweeks(json_object, json_fixture_object, num_game
                                                      [:100], json.dumps(json_fixture_object)[:100], num_gameweeks))
     result = 0
     for gameweek in range(num_gameweeks):
-        print(gameweek)
         result += predict_points(json_object, json_fixture_object, gameweek)
     return result
 
