@@ -41,7 +41,7 @@ def select_squad(current_squad):
             'player_' + str(player['id']), cat='Binary')
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
-        new_squad_points += player['selected'] * player['expected_points']
+        new_squad_points += player['selected'] * player['expected_points_this_gameweek']
 
         if player_type == 1:
             num_goal += player['selected']
@@ -130,7 +130,7 @@ def select_squad_ignore_transfers(bank):
             'player_' + str(player['id']), cat='Binary')
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
-        new_squad_points += player['selected'] * player['expected_points']
+        new_squad_points += player['selected'] * player['expected_points_this_gameweek']
         squad_value += player['selected'] * player['now_cost']
 
         if player_type == 1:

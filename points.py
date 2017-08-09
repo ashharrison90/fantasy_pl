@@ -2,7 +2,6 @@
 Functions used to calculate the expected points total for a given player.
 """
 import json
-import re
 import constants
 
 
@@ -11,24 +10,24 @@ def predict_points_multiple_gameweeks(json_object, json_fixture_object, num_game
     Attempt to predict total number of points across multiple gameweeks
     """
     print('#predict_points_multiple_gameweeks({}..., {}..., {})'.format(json.dumps(json_object)
-                                                     [:100], json.dumps(json_fixture_object)[:100], num_gameweeks))
+                                                                        [:100], json.dumps(json_fixture_object)[:100], num_gameweeks))
     result = 0
     for gameweek in range(num_gameweeks):
         result += predict_points(json_object, json_fixture_object, gameweek)
     return result
 
+
 def predict_points(json_object, json_fixture_object, gameweek=0):
     """
     Given a player's json object, this function attempts to predict
     how many points a given player will score in the next gameweek.
-    We use the lowest out of 'form' and 'points_per_game' - this should
-    make the bot more conservative with transfers.
+    We use the highest out of 'form' and 'points_per_game'
     """
     print('#predict_points({}..., {}..., {})'.format(json.dumps(json_object)
                                                      [:100], json.dumps(json_fixture_object)[:100], gameweek))
     form = float(json_object["form"])
     ppg = float(json_object["points_per_game"])
-    expected_points = (form + ppg) / 2
+    expected_points = max(form, ppg)
     injury_ratio = calculate_injury_multiplier(json_object)
     fixture_ratio = calculate_fixture_multiplier(
         json_object, json_fixture_object, gameweek)
@@ -46,19 +45,11 @@ def calculate_injury_multiplier(json_object):
     """
     print('#calculate_injury_multiplier({}...)'.format(
         json.dumps(json_object)[:100]))
-    status = json_object["status"]
-    injury_ratio = 1
-    if status == "a":
-        injury_ratio = 1
-    elif status == "i" or status == "s":
-        injury_ratio = 0
-    elif status == "d":
-        news = json_object["news"]
-        search_matched = re.search('.*\\s([\\d]+)\\%\\s.*', news)
-        if search_matched:
-            injury_ratio = int(search_matched.group(1)) / 100
-    print('#calculate_injury_multiplier returning: ', injury_ratio)
-    return injury_ratio
+    next_round_chance = json_object["chance_of_playing_next_round"] / 100 if json_object[
+        "chance_of_playing_next_round"] is not None else 1
+
+    print('#calculate_injury_multiplier returning: ', next_round_chance)
+    return next_round_chance
 
 
 def calculate_fixture_multiplier(json_object, json_fixture_object, gameweek=0):
