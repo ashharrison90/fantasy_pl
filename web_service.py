@@ -93,10 +93,11 @@ def login(username, password):
     # cookies
     MY_SESSION.get(constants.FANTASY_URL)
     dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
-    constants.NEXT_EVENT = dynamic_data['next-event']
+    static_data = MY_SESSION.get(constants.FANTASY_API_URL).json()
+    constants.NEXT_EVENT = static_data['next-event']
     constants.SQUAD_ID = dynamic_data['entry']['id']
     constants.SQUAD_URL += str(constants.SQUAD_ID) + '/'
-    constants.TRANSFER_DEADLINE = dynamic_data[
+    constants.TRANSFER_DEADLINE = static_data[
         'next_event_fixtures'][0]['deadline_time']
 
 
