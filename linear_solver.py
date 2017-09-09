@@ -222,7 +222,7 @@ def select_starting(squad):
     # First sort the starting lineup by expected points to give us the captain
     # and vice captain
     starting_list = sorted(
-        starting_list, key=lambda player: -player['expected_points'])
+        starting_list, key=lambda player: -player['expected_points_this_gameweek'])
     captain_id = starting_list[0]['id']
     vice_captain_id = starting_list[1]['id']
 
