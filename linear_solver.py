@@ -15,8 +15,6 @@ def select_squad(current_squad):
     """
     Given the current squad, calculate the best possible squad for next week.
     """
-    print('#select_squad({})'.format(current_squad))
-
     # Define the squad linear optimisation problem
     squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
 
@@ -102,7 +100,7 @@ def select_squad(current_squad):
 
     constants.NUM_CHANGES = pulp.value(num_changes)
 
-    print('#select_squad returning: ', new_squad)
+    print('#select_squad({})'.format(current_squad), new_squad)
     return new_squad
 
 
@@ -110,8 +108,6 @@ def select_squad_ignore_transfers(bank):
     """
     Ignoring the current squad, calculate the best possible squad for next week.
     """
-    print('#select_squad_ignore_transfers({})'.format(bank))
-
     # Define the squad linear optimisation problem
     squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
 
@@ -165,7 +161,7 @@ def select_squad_ignore_transfers(bank):
     print('Estimated squad points:', pulp.value(new_squad_points))
     print('Team value: ', locale.currency(pulp.value(squad_value)), '\n')
 
-    print('#select_squad_ignore_transfers returning: ', new_squad)
+    print('#select_squad_ignore_transfers({})'.format(bank), new_squad)
     return new_squad
 
 
@@ -173,8 +169,6 @@ def select_starting(squad):
     """
     Given a squad, select the best possible starting lineup.
     """
-    print('#select_starting({})'.format(squad))
-
     # Define the starting lineup linear optimisation problem
     starting_prob = pulp.LpProblem('Starting line up points', pulp.LpMaximize)
 
@@ -284,5 +278,5 @@ def select_starting(squad):
         else:
             sub_counter += 1
 
-    print('#select_starting returning: ', starting_lineup)
+    print('#select_starting({})'.format(squad), starting_lineup)
     return starting_lineup

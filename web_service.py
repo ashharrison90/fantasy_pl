@@ -19,6 +19,7 @@ def get_deadline():
     """
     static_data = MY_SESSION.get(constants.FANTASY_API_URL).json()
     result = static_data['next_event_fixtures'][0]['deadline_time']
+    print('#get_deadline()', result)
     return result
 
 
@@ -28,13 +29,12 @@ def get_transfers_squad():
     This gives more information about transfers, such as selling price.
     Note: must be logged in first!
     """
-    print('#get_transfers_squad()')
     squad_request_headers = {
         'X-Requested-With': 'XMLHttpRequest'
     }
     result = MY_SESSION.get(constants.TRANSFER_URL,
                             headers=squad_request_headers).json()
-    print('#get_transfers_squad returning: ', result)
+    print('#get_transfers_squad()', result)
     return result
 
 
@@ -42,9 +42,8 @@ def get_all_player_data():
     """
     Grab all the json data from the fantasy api url.
     """
-    print('#get_all_player_data()')
     result = MY_SESSION.get(constants.FANTASY_API_URL).json()
-    print('#get_all_player_data returning: ', json.dumps(result)[:100], '...')
+    print('#get_all_player_data()', json.dumps(result)[:100], '...')
     return result
 
 
@@ -52,10 +51,9 @@ def get_player_fixtures(player_id):
     """
     Grab a single player's full history and fixture list using their id.
     """
-    print('#get_player_fixtures({})'.format(player_id))
     result = MY_SESSION.get(
         constants.FANTASY_PLAYER_API_URL + str(player_id)).json()
-    print('#get_player_fixtures returning: ', json.dumps(result)[:100], '...')
+    print('#get_player_fixtures({})'.format(player_id), json.dumps(result)[:100], '...')
     return result
 
 
@@ -106,8 +104,6 @@ def create_transfers_object(old_squad, new_squad, use_wildcard=False):
     Given lists containing the old(/current)_squad and the new_squad,
     calculate the new transfers object.
     """
-    print('#create_transfers_object({}, {}, {})'.format(old_squad, new_squad, use_wildcard))
-
     # Create our transfers object and players_in/out lists
     new_squad_ids = [player['id'] for player in new_squad]
     old_squad_ids = [player['element'] for player in old_squad]
@@ -136,7 +132,7 @@ def create_transfers_object(old_squad, new_squad, use_wildcard=False):
             'element_out': players_out[i]['element'],
             'selling_price': players_out[i]['selling_price']
         })
-    print('#create_transfer_object returning: ', transfer_object)
+    print('#create_transfers_object({}, {}, {})'.format(old_squad, new_squad, use_wildcard), transfer_object)
     return transfer_object
 
 
@@ -144,8 +140,6 @@ def make_transfers(transfer_object):
     """
     Given a transfers object, make the corresponding transfers in the webapp.
     """
-    print('#make_transfers({})'.format(transfer_object))
-
     # if we need to make transfers, then do so and return the response object
     # else return a generic success response (since we didn't need to do
     # anything!)
@@ -173,7 +167,7 @@ def make_transfers(transfer_object):
         response_success = requests.Response
         response_success.status_code = 200
         result = response_success
-    print('#make_transfers returning: ', result)
+    print('#make_transfers({})'.format(transfer_object), result)
     return result
 
 
@@ -181,8 +175,6 @@ def set_starting_lineup(starting_lineup):
     """
     Set the starting lineup correctly in the webapp.
     """
-    print('#set_starting_lineup({})'.format(starting_lineup))
-
     # Make a GET request to get the correct cookies
     MY_SESSION.get(constants.SQUAD_URL)
     csrf_token = MY_SESSION.cookies.get(
@@ -203,7 +195,7 @@ def set_starting_lineup(starting_lineup):
     if result.status_code != 200:
         print('Error setting starting lineup: ', result)
         print('Error setting starting lineup: ', result.text)
-    print('#set_starting_lineup returning: ', result)
+    print('#set_starting_lineup({})'.format(starting_lineup), result)
     return result
 
 
@@ -212,7 +204,6 @@ def get_club_elo_ratings():
     Get Elo ratings for all clubs as of the current date.
     We will use these to calculate a fixture multiplier.
     """
-    print('#get_club_elo_ratings()')
     results_dict = {}
 
     # Get data for all teams.
@@ -239,5 +230,5 @@ def get_club_elo_ratings():
             for team in team_data:
                 if team['name'] == club_name:
                     results_dict[team['id']] = float(elo_rating)
-    print('#get_club_elo_ratings returning: ', results_dict)
+    print('#get_club_elo_ratings()', results_dict)
     return results_dict
