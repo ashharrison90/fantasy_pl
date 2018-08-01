@@ -32,7 +32,7 @@ def predict_points(json_object, json_fixture_object, gameweek=0):
     past_fixture_ratio = calculate_past_fixture_multiplier(json_fixture_object)
     result = expected_points * injury_ratio * fixture_ratio * past_fixture_ratio
     print('#predict_points({}..., {}..., {})'.format(json.dumps(json_object)
-                                                     [:100], json.dumps(json_fixture_object)[:100], gameweek), result)
+                                                     [:100], json.dumps(json_fixture_object)[:100], gameweek), result, '\n')
     return result
 
 
