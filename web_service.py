@@ -93,7 +93,7 @@ def login(username, password):
     dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
     static_data = MY_SESSION.get(constants.FANTASY_API_URL).json()
     constants.NEXT_EVENT = static_data['next-event']
-    constants.SQUAD_ID = dynamic_data['entry']['id']
+    constants.SQUAD_ID = dynamic_data['player']['entry']
     constants.SQUAD_URL += str(constants.SQUAD_ID) + '/'
     constants.TRANSFER_DEADLINE = static_data[
         'next_event_fixtures'][0]['deadline_time']
@@ -224,6 +224,8 @@ def get_club_elo_ratings():
                 club_name = 'Spurs'
             elif line[1] == 'Man United':
                 club_name = 'Man Utd'
+            elif line[1] == 'Sheffield United':
+                club_name = 'Sheffield Utd'
             else:
                 club_name = line[1]
 

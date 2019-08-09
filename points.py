@@ -56,7 +56,7 @@ def calculate_fixture_multiplier(json_object, json_fixture_object, gameweek=0):
     Given a player's json fixture object, calculate a fixture multiplier for
     the expected points. This is calculated using each club's Elo rating.
     """
-    next_match = json_fixture_object['fixtures_summary'][gameweek]
+    next_match = json_fixture_object['fixtures'][gameweek]
     team_id = json_object['team']
     opposition_team_id = next_match['team_a'] if next_match[
         'is_home'] else next_match['team_h']
@@ -76,7 +76,7 @@ def calculate_past_fixture_multiplier(json_fixture_object):
     possible minutes. Prevents players being chosen who barely play but have a very
     high points per game.
     """
-    past_games = json_fixture_object['history_summary']
+    past_games = json_fixture_object['history']
     multiplier = 1
     if len(past_games):
         total_minutes = sum([fixture['minutes'] for fixture in past_games])
