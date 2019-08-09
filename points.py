@@ -77,9 +77,13 @@ def calculate_past_fixture_multiplier(json_fixture_object):
     high points per game.
     """
     past_games = json_fixture_object['history']
+    past_season_games = json_fixture_object['history_past']
     multiplier = 1
     if len(past_games):
         total_minutes = sum([fixture['minutes'] for fixture in past_games])
         multiplier = total_minutes / (len(past_games) * 90)
+    elif len(past_season_games):
+        total_minutes = past_season_games[-1]['minutes']
+        multiplier = total_minutes / (constants.TOTAL_GAMES_IN_SEASON * 90)
     print('#calculate_past_fixture_multiplier({}...)'.format(json.dumps(json_fixture_object)[:100]), multiplier)
     return multiplier
