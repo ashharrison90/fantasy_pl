@@ -9,7 +9,7 @@ FANTASY_API_DYNAMIC_URL = 'https://fantasy.premierleague.com/api/me'
 FANTASY_PLAYER_API_URL = 'https://fantasy.premierleague.com/api/element-summary/'
 LOGIN_URL = 'https://users.premierleague.com/accounts/login/'
 SQUAD_URL = 'https://fantasy.premierleague.com/api/my-team/'
-TRANSFER_URL = 'https://fantasy.premierleague.com/api/transfers'
+TRANSFER_URL = 'https://fantasy.premierleague.com/api/my-team/'
 
 # Other constants
 NUM_CHANGES = 0

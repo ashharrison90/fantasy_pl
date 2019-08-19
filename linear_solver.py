@@ -24,9 +24,9 @@ def select_squad(current_squad):
     new_squad_points = num_changes = num_goal = num_def = num_mid = num_att = 0
     current_squad_ids = [player['element']
                          for player in current_squad['picks']]
-    free_transfers = max(0, current_squad['helper']['transfers_state']['free'] or 0)
-    squad_value = current_squad['helper']['value']
-    bank = current_squad['helper']['bank']
+    free_transfers = max(0, current_squad['transfers']['limit'] or 0)
+    squad_value = current_squad['transfers']['value']
+    bank = current_squad['transfers']['bank']
     total_bank = squad_value + bank
 
     # Loop through every player and add them to the constraints
