@@ -4,8 +4,8 @@ Some useful constants for the fantasy premier league
 # URLs needed
 CLUB_ELO_URL = 'http://api.clubelo.com/'
 FANTASY_URL = 'https://fantasy.premierleague.com'
-FANTASY_API_URL = 'https://fantasy.premierleague.com/api/bootstrap-static'
-FANTASY_API_DYNAMIC_URL = 'https://fantasy.premierleague.com/api/me'
+FANTASY_API_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/'
+FANTASY_API_DYNAMIC_URL = 'https://fantasy.premierleague.com/api/me/'
 FANTASY_PLAYER_API_URL = 'https://fantasy.premierleague.com/api/element-summary/'
 LOGIN_URL = 'https://users.premierleague.com/accounts/login/'
 SQUAD_URL = 'https://fantasy.premierleague.com/api/my-team/'

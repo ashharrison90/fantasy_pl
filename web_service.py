@@ -52,7 +52,7 @@ def get_player_fixtures(player_id):
     Grab a single player's full history and fixture list using their id.
     """
     result = MY_SESSION.get(
-        constants.FANTASY_PLAYER_API_URL + str(player_id)).json()
+        constants.FANTASY_PLAYER_API_URL + str(player_id) + '/').json()
     print('#get_player_fixtures({})'.format(player_id), json.dumps(result)[:100], '...')
     return result
 
