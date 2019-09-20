@@ -92,12 +92,11 @@ def login(username, password):
     MY_SESSION.get(constants.FANTASY_URL)
     dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
     static_data = MY_SESSION.get(constants.FANTASY_API_URL).json()
-    # constants.NEXT_EVENT = static_data['next-event']
+    constants.NEXT_EVENT = next(event for event in static_data['events'] if event['finished']==False)
     constants.SQUAD_ID = dynamic_data['player']['entry']
     constants.SQUAD_URL += str(constants.SQUAD_ID) + '/'
     constants.TRANSFER_URL += str(constants.SQUAD_ID) + '/'
-    # constants.TRANSFER_DEADLINE = static_data[
-    #     'next_event_fixtures'][0]['deadline_time']
+    constants.TRANSFER_DEADLINE = constants.NEXT_EVENT['deadline_time']
 
 
 def create_transfers_object(old_squad, new_squad, use_wildcard=False):
@@ -152,7 +151,7 @@ def make_transfers(transfer_object):
         transfer_headers = {
             'X-CSRFToken': csrf_token,
             'X-Requested-With': 'XMLHttpRequest',
-            'Referer': 'https://fantasy.premierleague.com/a/squad/transfers'
+            'Referer': 'https://fantasy.premierleague.com/transfers'
         }
 
         result = MY_SESSION.post(
@@ -184,7 +183,7 @@ def set_starting_lineup(starting_lineup):
     starting_lineup_headers = {
         'X-CSRFToken': csrf_token,
         'X-Requested-With': 'XMLHttpRequest',
-        'Referer': 'https://fantasy.premierleague.com/a/team/my'
+        'Referer': 'https://fantasy.premierleague.com/my-team'
     }
 
     result = MY_SESSION.post(
