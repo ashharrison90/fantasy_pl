@@ -32,7 +32,7 @@ def get_transfers_squad():
     squad_request_headers = {
         'X-Requested-With': 'XMLHttpRequest'
     }
-    result = MY_SESSION.get(constants.TRANSFER_URL,
+    result = MY_SESSION.get(constants.SQUAD_URL,
                             headers=squad_request_headers).json()
     print('#get_transfers_squad()', constants.TRANSFER_URL, result)
     return result
@@ -144,7 +144,7 @@ def make_transfers(transfer_object):
     # else return a generic success response (since we didn't need to do
     # anything!)
     if len(transfer_object['transfers']) > 0:
-        MY_SESSION.get('https://fantasy.premierleague.com/a/squad/transfers')
+        MY_SESSION.get('https://fantasy.premierleague.com/transfers')
         csrf_token = MY_SESSION.cookies.get(
             'csrftoken', domain='fantasy.premierleague.com')
 
