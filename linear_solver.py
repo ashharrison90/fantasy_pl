@@ -7,6 +7,8 @@ import constants
 import points
 import pulp
 import web_service
+import logging
+logger = logging.getLogger()
 
 locale.setlocale(locale.LC_ALL, '')
 
@@ -16,7 +18,7 @@ def select_squad(current_squad):
     Given the current squad, calculate the best possible squad for next week.
     """
     # Define the squad linear optimisation problem
-    squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
+    squad_prob = pulp.LpProblem('squad', pulp.LpMaximize)
 
     # Define and get some necessary constants
     teams_represented = [0] * 20
@@ -32,6 +34,7 @@ def select_squad(current_squad):
     # Loop through every player and add them to the constraints
     all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
+        print('Predicting points for {}', player)
         fixture_data = web_service.get_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
         player['expected_points_this_gameweek'] = points.predict_points(player, fixture_data)
@@ -100,7 +103,8 @@ def select_squad(current_squad):
 
     constants.NUM_CHANGES = pulp.value(num_changes)
 
-    print('#select_squad({})'.format(current_squad), new_squad)
+    logger.debug('Current squad: {}'.format(current_squad))
+    logger.debug('New squad: {}'.format(new_squad))
     return new_squad
 
 
@@ -109,7 +113,7 @@ def select_squad_ignore_transfers(bank):
     Ignoring the current squad, calculate the best possible squad for next week.
     """
     # Define the squad linear optimisation problem
-    squad_prob = pulp.LpProblem('Squad points', pulp.LpMaximize)
+    squad_prob = pulp.LpProblem('squad', pulp.LpMaximize)
 
     # Define and get some necessary constants
     teams_represented = [0] * 20
@@ -121,13 +125,15 @@ def select_squad_ignore_transfers(bank):
     for player in all_players:
         fixture_data = web_service.get_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
-        player['expected_points_this_gameweek'] = points.predict_points(player, fixture_data)
+        expected_points_this_gameweek = points.predict_points(player, fixture_data)
+        player['expected_points_this_gameweek'] = expected_points_this_gameweek
         player['selected'] = pulp.LpVariable(
             'player_' + str(player['id']), cat='Binary')
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
         new_squad_points += player['selected'] * player['expected_points_this_gameweek']
         squad_value += player['selected'] * player['now_cost']
+        print('Predicted points for {} {}: {:.2f}'.format(player['first_name'], player['second_name'], expected_points_this_gameweek))
 
         if player_type == 1:
             num_goal += player['selected']
@@ -161,7 +167,7 @@ def select_squad_ignore_transfers(bank):
     print('Estimated squad points:', pulp.value(new_squad_points))
     print('Team value: ', locale.currency(pulp.value(squad_value)), '\n')
 
-    print('#select_squad_ignore_transfers({})'.format(bank), new_squad)
+    logger.debug('New squad: {}'.format(new_squad))
     return new_squad
 
 
@@ -170,7 +176,7 @@ def select_starting(squad):
     Given a squad, select the best possible starting lineup.
     """
     # Define the starting lineup linear optimisation problem
-    starting_prob = pulp.LpProblem('Starting line up points', pulp.LpMaximize)
+    starting_prob = pulp.LpProblem('starting_line_up', pulp.LpMaximize)
 
     # Define and get some necessary constants
     starting_points = num_goal_starting = num_def_starting = num_mid_starting = num_att_starting = num_starting = 0
@@ -240,13 +246,12 @@ def select_starting(squad):
         else:
             print('X', end=' ')
         print(
-            player['expected_points_this_gameweek'],
-            player['expected_points'],
             player['id'],
+            locale.currency(player['now_cost']),
             player['first_name'],
             player['second_name'],
-            player['element_type'],
-            locale.currency(player['now_cost'])
+            player['expected_points_this_gameweek'],
+            player['expected_points']
         )
 
     # Sort the subs by expected points.
@@ -257,13 +262,12 @@ def select_starting(squad):
     for player in subs_list:
         print(
             '-',
-            player['expected_points_this_gameweek'],
-            player['expected_points'],
             player['id'],
+            locale.currency(player['now_cost']),
             player['first_name'],
             player['second_name'],
-            player['element_type'],
-            locale.currency(player['now_cost'])
+            player['expected_points_this_gameweek'],
+            player['expected_points']
         )
 
         starting_lineup['picks'].append({
@@ -278,5 +282,5 @@ def select_starting(squad):
         else:
             sub_counter += 1
 
-    print('#select_starting({})'.format(squad), starting_lineup)
+    logger.debug('New starting lineup: {}'.format(starting_lineup))
     return starting_lineup

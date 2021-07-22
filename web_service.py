@@ -8,6 +8,8 @@ import json
 import urllib
 import requests
 import constants
+import logging
+logger = logging.getLogger()
 
 # Create a session - this persists cookies across requests
 MY_SESSION = requests.Session()
@@ -19,7 +21,7 @@ def get_deadline():
     """
     static_data = MY_SESSION.get(constants.FANTASY_API_URL).json()
     result = static_data['next_event_fixtures'][0]['deadline_time']
-    print('#get_deadline()', result)
+    logger.info('Deadline is {}'.format(result))
     return result
 
 
@@ -34,7 +36,7 @@ def get_transfers_squad():
     }
     result = MY_SESSION.get(constants.SQUAD_URL,
                             headers=squad_request_headers).json()
-    print('#get_transfers_squad()', constants.TRANSFER_URL, result)
+    logger.debug('Current transfers squad is {}'.format(result))
     return result
 
 
@@ -43,7 +45,7 @@ def get_all_player_data():
     Grab all the json data from the fantasy api url.
     """
     result = MY_SESSION.get(constants.FANTASY_API_URL).json()
-    print('#get_all_player_data()', json.dumps(result)[:100], '...')
+    logger.debug('Got player data: {}'.format(json.dumps(result)[:100], '...'))
     return result
 
 
@@ -53,7 +55,7 @@ def get_player_fixtures(player_id):
     """
     result = MY_SESSION.get(
         constants.FANTASY_PLAYER_API_URL + str(player_id) + '/').json()
-    print('#get_player_fixtures({})'.format(player_id), json.dumps(result)[:100], '...')
+    logger.debug('Got fixtures for player with id {}: {}...'.format(player_id, json.dumps(result)[:100]))
     return result
 
 
@@ -61,7 +63,7 @@ def login(username, password):
     """
     Login to the fantasy football web app.
     """
-    print('#login({}, {})'.format(username, password))
+    logger.info('Logging in to {} with username {}'.format(constants.LOGIN_URL, username))
 
     # Make a GET request to users.premierleague.com to get the correct cookies
     MY_SESSION.get(constants.LOGIN_URL)
@@ -84,8 +86,7 @@ def login(username, password):
     result = MY_SESSION.post(
         constants.LOGIN_URL, headers=login_headers, data=login_data)
     if result.status_code != 200:
-        print('Error logging in: ', result)
-        print('Error logging in: ', result.text)
+        logger.error('Error logging in!', result)
 
     # Make a GET request to fantasy.premierleague.com to get the correct
     # cookies
@@ -132,7 +133,7 @@ def create_transfers_object(old_squad, new_squad, use_wildcard=False):
             'element_out': players_out[i]['element'],
             'selling_price': players_out[i]['selling_price']
         })
-    print('#create_transfers_object({}, {}, {})'.format(old_squad, new_squad, use_wildcard), transfer_object)
+    logger.debug('Created transfer object: {}'.format(transfer_object))
     return transfer_object
 
 
@@ -161,13 +162,12 @@ def make_transfers(transfer_object):
         )
 
         if result.status_code != 200:
-            print('Error making transfers: ', result)
-            print('Error making transfers: ', result.text)
+            logger.error('Error making transfers!', result)
     else:
         response_success = requests.Response
         response_success.status_code = 200
         result = response_success
-    print('#make_transfers({})'.format(transfer_object), result)
+    logger.debug('Made transfers successfully', result)
     return result
 
 
@@ -193,9 +193,8 @@ def set_starting_lineup(starting_lineup):
     )
 
     if result.status_code != 200:
-        print('Error setting starting lineup: ', result)
-        print('Error setting starting lineup: ', result.text)
-    print('#set_starting_lineup({})'.format(starting_lineup), result)
+        logger.error('Error setting starting lineup!', result)
+    logger.debug('Set starting lineup successfully', result)
     return result
 
 
@@ -232,5 +231,5 @@ def get_club_elo_ratings():
             for team in team_data:
                 if team['name'] == club_name:
                     results_dict[team['id']] = float(elo_rating)
-    print('#get_club_elo_ratings()', results_dict)
+    logger.debug('Got Elo ratings successfully', results_dict)
     return results_dict
