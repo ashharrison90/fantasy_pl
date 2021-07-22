@@ -13,7 +13,7 @@ def predict_points_multiple_gameweeks(player, fixture_data, num_gameweeks):
     result = 0
     for gameweek in range(num_gameweeks):
         result += predict_points(player, fixture_data, gameweek)
-    logger.info('Predicted points for {} {} over {} weeks: {}'.format(player['first_name'], player['second_name'], num_gameweeks, result))                                                                    
+    logger.debug('Predicted points for {} {} over {} weeks: {}'.format(player['first_name'], player['second_name'], num_gameweeks, result))                                                                    
     return result
 
 
@@ -31,7 +31,7 @@ def predict_points(player, fixture_data, gameweek=0):
         player, fixture_data, gameweek)
     past_fixture_ratio = calculate_past_fixture_multiplier(player, fixture_data)
     result = expected_points * injury_ratio * fixture_ratio * past_fixture_ratio
-    logger.info('Predicted points for {} {} in gameweek {}: {}'.format(player['first_name'], player['second_name'], gameweek, result))                                                                    
+    logger.debug('Predicted points for {} {} in gameweek {}: {}'.format(player['first_name'], player['second_name'], gameweek, result))                                                                    
     return result
 
 
@@ -45,7 +45,7 @@ def calculate_injury_multiplier(player):
     next_round_chance = player['chance_of_playing_next_round'] / 100 if player[
         'chance_of_playing_next_round'] is not None else 1
 
-    logger.info('Injury multiplier for {} {}: {}'.format(player['first_name'], player['second_name'], next_round_chance))
+    logger.debug('Injury multiplier for {} {}: {}'.format(player['first_name'], player['second_name'], next_round_chance))
     return next_round_chance
 
 
@@ -63,7 +63,7 @@ def calculate_fixture_multiplier(player, fixture_data, gameweek=0):
     opposition_team_elo = constants.CLUB_ELO_RATINGS[opposition_team_id]
 
     normalised_adjustment = team_elo / opposition_team_elo
-    logger.info('Fixture multiplier for {} {} in gameweek {}: {}'.format(player['first_name'], player['second_name'], gameweek, normalised_adjustment))
+    logger.debug('Fixture multiplier for {} {} in gameweek {}: {}'.format(player['first_name'], player['second_name'], gameweek, normalised_adjustment))
     return normalised_adjustment
 
 def calculate_past_fixture_multiplier(player, fixture_data):
@@ -82,5 +82,5 @@ def calculate_past_fixture_multiplier(player, fixture_data):
     elif len(past_season_games):
         total_minutes = past_season_games[-1]['minutes']
         multiplier = total_minutes / (constants.TOTAL_GAMES_IN_SEASON * 90)
-    logger.info('Past fixture multiplier for {} {}: {}'.format(player['first_name'], player['second_name'], multiplier))
+    logger.debug('Past fixture multiplier for {} {}: {}'.format(player['first_name'], player['second_name'], multiplier))
     return multiplier

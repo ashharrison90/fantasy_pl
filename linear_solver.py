@@ -34,15 +34,16 @@ def select_squad(current_squad):
     # Loop through every player and add them to the constraints
     all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
-        print('Predicting points for {}', player)
         fixture_data = web_service.get_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
-        player['expected_points_this_gameweek'] = points.predict_points(player, fixture_data)
+        expected_points_this_gameweek = points.predict_points(player, fixture_data)
+        player['expected_points_this_gameweek'] = expected_points_this_gameweek
         player['selected'] = pulp.LpVariable(
             'player_' + str(player['id']), cat='Binary')
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
         new_squad_points += player['selected'] * player['expected_points_this_gameweek']
+        logger.info('Predicted points for {} {}: {:.2f}'.format(player['first_name'], player['second_name'], expected_points_this_gameweek))
 
         if player_type == 1:
             num_goal += player['selected']
@@ -95,11 +96,11 @@ def select_squad(current_squad):
         if pulp.value(player['selected']) == 1:
             new_squad.append(player)
 
-    print('Estimated squad points:', pulp.value(new_squad_points))
-    print('Number of transfers:', pulp.value(num_changes))
-    print('Cost of transfers:', pulp.value(transfer_cost))
-    print('Team value:', locale.currency(pulp.value(squad_value)))
-    print('Bank:', locale.currency(pulp.value(bank)), '\n')
+    logger.info('Estimated squad points:'.format(pulp.value(new_squad_points)))
+    logger.info('Number of transfers:'.format(pulp.value(num_changes)))
+    logger.info('Cost of transfers:'.format(pulp.value(transfer_cost)))
+    logger.info('Team value:'.format(locale.currency(pulp.value(squad_value))))
+    logger.info('Bank:'.format(locale.currency(pulp.value(bank)), '\n'))
 
     constants.NUM_CHANGES = pulp.value(num_changes)
 
@@ -133,7 +134,7 @@ def select_squad_ignore_transfers(bank):
         player_type = player['element_type']
         new_squad_points += player['selected'] * player['expected_points_this_gameweek']
         squad_value += player['selected'] * player['now_cost']
-        print('Predicted points for {} {}: {:.2f}'.format(player['first_name'], player['second_name'], expected_points_this_gameweek))
+        logger.info('Predicted points for {} {}: {:.2f}'.format(player['first_name'], player['second_name'], expected_points_this_gameweek))
 
         if player_type == 1:
             num_goal += player['selected']
@@ -164,8 +165,8 @@ def select_squad_ignore_transfers(bank):
         if pulp.value(player['selected']) == 1:
             new_squad.append(player)
 
-    print('Estimated squad points:', pulp.value(new_squad_points))
-    print('Team value: ', locale.currency(pulp.value(squad_value)), '\n')
+    logger.info('Estimated squad points: {}'.format(pulp.value(new_squad_points)))
+    logger.info('Team value: {}'.format(locale.currency(pulp.value(squad_value))))
 
     logger.debug('New squad: {}'.format(new_squad))
     return new_squad
@@ -211,7 +212,7 @@ def select_starting(squad):
         starting_prob.solve(pulp.GLPK_CMD(msg=0))
     else:
         starting_prob.solve()
-    print('Estimated starting points:', pulp.value(starting_points))
+    logger.info('Estimated starting points: {}'.format(pulp.value(starting_points)))
 
     # Split the squad into starting lineup and subs
     starting_list = [player for player in squad if pulp.value(
@@ -237,22 +238,21 @@ def select_starting(squad):
             'is_captain': 'false',
             'is_vice_captain': 'false'
         })
+        marker = 'X'
         if player['id'] == captain_id:
             starting_lineup['picks'][-1]['is_captain'] = 'true'
-            print('C', end=' ')
+            marker = 'C'
         elif player['id'] == vice_captain_id:
             starting_lineup['picks'][-1]['is_vice_captain'] = 'true'
-            print('V', end=' ')
-        else:
-            print('X', end=' ')
-        print(
-            player['id'],
+            marker='V'
+        logger.info('{} {}  {}  {}  {:.2f}  {:.2f}'.format(
+            marker,
             locale.currency(player['now_cost']),
             player['first_name'],
             player['second_name'],
             player['expected_points_this_gameweek'],
             player['expected_points']
-        )
+        ))
 
     # Sort the subs by expected points.
     # We want the subs expected to score the most points ordered first.
@@ -260,15 +260,14 @@ def select_starting(squad):
     subs_list = sorted(subs_list, key=lambda player: -
                        player['expected_points'])
     for player in subs_list:
-        print(
+        logger.info('{} {}  {}  {}  {:.2f}  {:.2f}'.format(
             '-',
-            player['id'],
             locale.currency(player['now_cost']),
             player['first_name'],
             player['second_name'],
             player['expected_points_this_gameweek'],
             player['expected_points']
-        )
+        ))
 
         starting_lineup['picks'].append({
             'element': player['id'],
