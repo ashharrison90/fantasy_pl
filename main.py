@@ -13,6 +13,7 @@ import constants
 import linear_solver
 import web_service
 import logging
+import argparse
 
 # Set up the logger
 # Log info to stdout, debug to file
@@ -38,6 +39,15 @@ if sys.stdout.encoding != 'UTF-8':
 if sys.stderr.encoding != 'UTF-8':
     sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
+# Set up the command line parser
+parser = argparse.ArgumentParser(description='Mr Robot v3.0')
+parser.add_argument('username', help='Login username for fantasy.premierleague.com')
+parser.add_argument('password', help='Login password for fantasy.premierleague.com')
+parser.add_argument('--apply', action='store_true', help='Whether to apply the changes (default: False)')
+parser.add_argument('--ignore-squad', action='store_true', help='Whether to ignore the current squad when calculating the new squad (default: False)')
+
+args = parser.parse_args()
+
 # Get Elo data for clubs and save it to the constants
 # This will be a dictionary of team ids and corresponding Elo ratings
 logger.info('Getting Elo ratings')
@@ -45,29 +55,32 @@ constants.CLUB_ELO_RATINGS = web_service.get_club_elo_ratings()
 
 # Login
 logger.info('Logging in to {}'.format(constants.LOGIN_URL))
-USERNAME = sys.argv[1]
-PASSWORD = sys.argv[2]
-web_service.login(USERNAME, PASSWORD)
+web_service.login(args.username, args.password)
 
 # Get the current squad
-logger.info('Retrieving the current squad')
-CURRENT_SQUAD = web_service.get_transfers_squad()
+if not args.ignore_squad:
+    logger.info('Retrieving the current squad')
+    CURRENT_SQUAD = web_service.get_transfers_squad()
 
 # Calculate the new squad
 logger.info('Calculating the new squad')
-NEW_SQUAD = linear_solver.select_squad(CURRENT_SQUAD)
-
-# make transfers to update the squad on fantasy.premierleague.com
-logger.info('Making transfers')
-WILDCARD_STATUS = (CURRENT_SQUAD['helper']['wildcard_status'] == 'available')
-TRANSFER_OBJECT = web_service.create_transfers_object(
-    CURRENT_SQUAD['picks'], NEW_SQUAD, (constants.NUM_CHANGES >= 6) and WILDCARD_STATUS)
-web_service.make_transfers(TRANSFER_OBJECT)
+if args.ignore_squad:
+    NEW_SQUAD = linear_solver.select_squad_ignore_transfers(1000)
+else:
+    NEW_SQUAD = linear_solver.select_squad(CURRENT_SQUAD)
 
 # Calculate the new starting lineup
 logger.info('Calculating the new starting lineup')
 NEW_STARTING = linear_solver.select_starting(NEW_SQUAD)
 
-# update the starting lineup on fantasy.premierleague.com
-logger.info('Updating the starting lineup')
-web_service.set_starting_lineup(NEW_STARTING)
+if args.apply:
+    # make transfers to update the squad on fantasy.premierleague.com
+    logger.info('Making transfers')
+    WILDCARD_STATUS = (CURRENT_SQUAD['helper']['wildcard_status'] == 'available')
+    TRANSFER_OBJECT = web_service.create_transfers_object(
+        CURRENT_SQUAD['picks'], NEW_SQUAD, (constants.NUM_CHANGES >= 6) and WILDCARD_STATUS)
+    web_service.make_transfers(TRANSFER_OBJECT)
+
+    # update the starting lineup on fantasy.premierleague.com
+    logger.info('Updating the starting lineup')
+    web_service.set_starting_lineup(NEW_STARTING)
