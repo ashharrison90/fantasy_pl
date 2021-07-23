@@ -65,7 +65,7 @@ if not args.ignore_squad:
 # Calculate the new squad
 logger.info('Calculating the new squad')
 if args.ignore_squad:
-    NEW_SQUAD = linear_solver.select_squad_ignore_transfers(1000)
+    NEW_SQUAD = linear_solver.select_squad_ignore_transfers(constants.INITIAL_TEAM_VALUE)
 else:
     NEW_SQUAD = linear_solver.select_squad(CURRENT_SQUAD)
 
