@@ -23,7 +23,7 @@ def select_squad(current_squad):
     # Define and get some necessary constants
     teams_represented = [0] * 20
     new_squad = []
-    new_squad_points = num_changes = num_goal = num_def = num_mid = num_att = 0
+    new_squad_points = num_changes = num_goal = num_def = num_mid = num_att = num_cheap = 0
     current_squad_ids = [player['element']
                          for player in current_squad['picks']]
     free_transfers = max(0, current_squad['transfers']['limit'] or 0)
@@ -43,6 +43,8 @@ def select_squad(current_squad):
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
         new_squad_points += player['selected'] * player['expected_points_this_gameweek']
+        if player['now_cost'] <= 51.00:
+            num_cheap += player['selected']
         logger.info('Predicted points for {} {}: {:.2f}'.format(player['first_name'], player['second_name'], expected_points_this_gameweek))
 
         if player_type == 1:
@@ -85,6 +87,11 @@ def select_squad(current_squad):
     squad_prob += (num_mid == constants.SQUAD_NUM_MIDFIELDERS)
     squad_prob += (num_att == constants.SQUAD_NUM_ATTACKERS)
     squad_prob += (num_changes - free_transfers_used >= 0)
+    # We want to prioritise the starting lineup by setting a limit on the cost of the bench.
+    # But this seems impossible to write as a condition.
+    # Instead, write the condition as having at least 4 cheap players.
+    # This effectively gives us a limit for the whole bench.
+    squad_prob += (num_cheap >= 4)
 
     # Solve! On the pi, we need to use the GLPK solver.
     if platform.system() == 'Linux':
@@ -96,11 +103,11 @@ def select_squad(current_squad):
         if pulp.value(player['selected']) == 1:
             new_squad.append(player)
 
-    logger.info('Estimated squad points:'.format(pulp.value(new_squad_points)))
-    logger.info('Number of transfers:'.format(pulp.value(num_changes)))
-    logger.info('Cost of transfers:'.format(pulp.value(transfer_cost)))
-    logger.info('Team value:'.format(locale.currency(pulp.value(squad_value))))
-    logger.info('Bank:'.format(locale.currency(pulp.value(bank)), '\n'))
+    logger.info('Estimated squad points: {}'.format(pulp.value(new_squad_points)))
+    logger.info('Number of transfers: {}'.format(pulp.value(num_changes)))
+    logger.info('Cost of transfers: {}'.format(pulp.value(transfer_cost)))
+    logger.info('Team value: {}'.format(locale.currency(pulp.value(squad_value))))
+    logger.info('Bank: {}'.format(locale.currency(pulp.value(bank))))
 
     constants.NUM_CHANGES = pulp.value(num_changes)
 
@@ -119,7 +126,7 @@ def select_squad_ignore_transfers(bank):
     # Define and get some necessary constants
     teams_represented = [0] * 20
     new_squad = []
-    new_squad_points = squad_value = num_goal = num_def = num_mid = num_att = 0
+    new_squad_points = squad_value = num_goal = num_def = num_mid = num_att = num_cheap = 0
 
     # Loop through every player and add them to the constraints
     all_players = web_service.get_all_player_data()['elements']
@@ -134,6 +141,8 @@ def select_squad_ignore_transfers(bank):
         player_type = player['element_type']
         new_squad_points += player['selected'] * player['expected_points_this_gameweek']
         squad_value += player['selected'] * player['now_cost']
+        if player['now_cost'] <= 51.00:
+            num_cheap += player['selected']
         logger.info('Predicted points for {} {}: {:.2f}'.format(player['first_name'], player['second_name'], expected_points_this_gameweek))
 
         if player_type == 1:
@@ -154,6 +163,11 @@ def select_squad_ignore_transfers(bank):
     squad_prob += (num_def == constants.SQUAD_NUM_DEFENDERS)
     squad_prob += (num_mid == constants.SQUAD_NUM_MIDFIELDERS)
     squad_prob += (num_att == constants.SQUAD_NUM_ATTACKERS)
+    # We want to prioritise the starting lineup by setting a limit on the cost of the bench.
+    # But this seems impossible to write as a condition.
+    # Instead, write the condition as having at least 4 cheap players.
+    # This effectively gives us a limit for the whole bench.
+    squad_prob += (num_cheap >= 4)
 
     # Solve! On the pi, we need to use the GLPK solver.
     if platform.system() == 'Linux':
