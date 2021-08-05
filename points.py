@@ -77,7 +77,7 @@ def calculate_past_fixture_multiplier(player, fixture_data):
     past_season_games = fixture_data['history_past']
     multiplier = 1
     if len(past_games):
-        total_games = sum(1 if [fixture['minutes'] >= 60 else 0 for fixture in past_games])
+        total_games = sum(1 if fixture['minutes'] > 0 else 0 for fixture in past_games)
         multiplier = total_games / len(past_games)
     elif len(past_season_games):
         total_minutes = past_season_games[-1]['minutes']
