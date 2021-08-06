@@ -1,7 +1,6 @@
 """
 Functions used to calculate the expected points total for a given player.
 """
-import json
 import constants
 import logging
 logger = logging.getLogger()

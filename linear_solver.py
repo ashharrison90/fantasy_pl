@@ -1,13 +1,13 @@
 """
 Functions needed to solve the linear optimisation problem
 """
-import locale
-import platform
 import constants
-import points
-import pulp
-import web_service
+import locale
 import logging
+import platform
+import pulp
+from points import predict_points, predict_points_multiple_gameweeks
+from web_service import get_all_player_data, get_player_fixtures
 logger = logging.getLogger()
 
 locale.setlocale(locale.LC_ALL, '')
@@ -32,11 +32,11 @@ def select_squad(current_squad):
     total_bank = squad_value + bank
 
     # Loop through every player and add them to the constraints
-    all_players = web_service.get_all_player_data()['elements']
+    all_players = get_all_player_data()['elements']
     for player in all_players:
-        fixture_data = web_service.get_player_fixtures(player['id'])
-        player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
-        expected_points_this_gameweek = points.predict_points(player, fixture_data)
+        fixture_data = get_player_fixtures(player['id'])
+        player['expected_points'] = predict_points_multiple_gameweeks(player, fixture_data, 3)
+        expected_points_this_gameweek = predict_points(player, fixture_data)
         player['expected_points_this_gameweek'] = expected_points_this_gameweek
         player['selected'] = pulp.LpVariable(
             'player_' + str(player['id']), cat='Binary')
@@ -103,7 +103,7 @@ def select_squad(current_squad):
         if pulp.value(player['selected']) == 1:
             new_squad.append(player)
 
-    logger.info('Estimated squad points: {}'.format(pulp.value(new_squad_points)))
+    logger.info('Estimated squad points: {:.2f}'.format(pulp.value(new_squad_points)))
     logger.info('Number of transfers: {}'.format(pulp.value(num_changes)))
     logger.info('Cost of transfers: {}'.format(pulp.value(transfer_cost)))
     logger.info('Team value: {}'.format(locale.currency(pulp.value(squad_value))))
@@ -129,11 +129,11 @@ def select_squad_ignore_transfers(bank):
     new_squad_points = squad_value = num_goal = num_def = num_mid = num_att = num_cheap = 0
 
     # Loop through every player and add them to the constraints
-    all_players = web_service.get_all_player_data()['elements']
+    all_players = get_all_player_data()['elements']
     for player in all_players:
-        fixture_data = web_service.get_player_fixtures(player['id'])
-        player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
-        expected_points_this_gameweek = points.predict_points(player, fixture_data)
+        fixture_data = get_player_fixtures(player['id'])
+        player['expected_points'] = predict_points_multiple_gameweeks(player, fixture_data, 3)
+        expected_points_this_gameweek = predict_points(player, fixture_data)
         player['expected_points_this_gameweek'] = expected_points_this_gameweek
         player['selected'] = pulp.LpVariable(
             'player_' + str(player['id']), cat='Binary')
@@ -179,7 +179,7 @@ def select_squad_ignore_transfers(bank):
         if pulp.value(player['selected']) == 1:
             new_squad.append(player)
 
-    logger.info('Estimated squad points: {}'.format(pulp.value(new_squad_points)))
+    logger.info('Estimated squad points: {:.2f}'.format(pulp.value(new_squad_points)))
     logger.info('Team value: {}'.format(locale.currency(pulp.value(squad_value))))
 
     logger.debug('New squad: {}'.format(new_squad))
@@ -226,7 +226,7 @@ def select_starting(squad):
         starting_prob.solve(pulp.GLPK_CMD(msg=0))
     else:
         starting_prob.solve()
-    logger.info('Estimated starting points: {}'.format(pulp.value(starting_points)))
+    logger.info('Estimated starting points: {:.2f}'.format(pulp.value(starting_points)))
 
     # Split the squad into starting lineup and subs
     starting_list = [player for player in squad if pulp.value(

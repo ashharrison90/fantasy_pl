@@ -7,13 +7,13 @@ The main program.
     5. Calculate the best possible starting lineup for next week.
     6. Update the starting lineup on fantasy.premierleague.com.
 """
-import codecs
-import sys
-import constants
-import linear_solver
-import web_service
-import logging
 import argparse
+import codecs
+import constants
+import logging
+import sys
+from linear_solver import select_squad, select_squad_ignore_transfers, select_starting
+from web_service import create_transfers_object, get_club_elo_ratings, get_transfers_squad, login, make_transfers, set_starting_lineup
 
 # Set up the logger
 # Log info to stdout, debug to file
@@ -51,36 +51,36 @@ args = parser.parse_args()
 # Get Elo data for clubs and save it to the constants
 # This will be a dictionary of team ids and corresponding Elo ratings
 logger.info('Getting Elo ratings')
-constants.CLUB_ELO_RATINGS = web_service.get_club_elo_ratings()
+constants.CLUB_ELO_RATINGS = get_club_elo_ratings()
 
 # Login
 logger.info('Logging in to {}'.format(constants.LOGIN_URL))
-web_service.login(args.username, args.password)
+login(args.username, args.password)
 
 # Get the current squad
 if not args.ignore_squad:
     logger.info('Retrieving the current squad')
-    CURRENT_SQUAD = web_service.get_transfers_squad()
+    CURRENT_SQUAD = get_transfers_squad()
 
 # Calculate the new squad
 logger.info('Calculating the new squad')
 if args.ignore_squad:
-    NEW_SQUAD = linear_solver.select_squad_ignore_transfers(constants.INITIAL_TEAM_VALUE)
+    NEW_SQUAD = select_squad_ignore_transfers(constants.INITIAL_TEAM_VALUE)
 else:
-    NEW_SQUAD = linear_solver.select_squad(CURRENT_SQUAD)
+    NEW_SQUAD = select_squad(CURRENT_SQUAD)
 
 # Calculate the new starting lineup
 logger.info('Calculating the new starting lineup')
-NEW_STARTING = linear_solver.select_starting(NEW_SQUAD)
+NEW_STARTING = select_starting(NEW_SQUAD)
 
 if args.apply:
     # make transfers to update the squad on fantasy.premierleague.com
     logger.info('Making transfers')
     WILDCARD_STATUS = (CURRENT_SQUAD['helper']['wildcard_status'] == 'available')
-    TRANSFER_OBJECT = web_service.create_transfers_object(
+    TRANSFER_OBJECT = create_transfers_object(
         CURRENT_SQUAD['picks'], NEW_SQUAD, (constants.NUM_CHANGES >= 6) and WILDCARD_STATUS)
-    web_service.make_transfers(TRANSFER_OBJECT)
+    make_transfers(TRANSFER_OBJECT)
 
     # update the starting lineup on fantasy.premierleague.com
     logger.info('Updating the starting lineup')
-    web_service.set_starting_lineup(NEW_STARTING)
+    set_starting_lineup(NEW_STARTING)
