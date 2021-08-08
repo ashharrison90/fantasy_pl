@@ -3,7 +3,14 @@ Functions used to calculate the expected points total for a given player.
 """
 import constants
 import logging
+from model import get_model
+import torch
+import web_service
+from numpy import stack
+from dateutil import parser
+from torch import Tensor
 logger = logging.getLogger()
+df, model = get_model()
 
 def predict_points_multiple_gameweeks(player, fixture_data, num_gameweeks):
     """
@@ -22,14 +29,52 @@ def predict_points(player, fixture_data, gameweek=0):
     how many points a given player will score in the next gameweek.
     We use the highest out of 'form' and 'points_per_game'
     """
-    form = float(player['form'])
-    ppg = float(player['points_per_game'])
-    expected_points = max(form, ppg)
+    name_dict = dict(enumerate(df['name'].cat.categories))
+    opp_team_name_dict = dict(enumerate(df['opp_team_name'].cat.categories))
+    position_dict = dict(enumerate(df['position'].cat.categories))
+    was_home_dict = dict(enumerate(df['was_home'].cat.categories))
+    player_id = None
+    for id, name in name_dict.items():
+        if name == '{} {}'.format(player['first_name'], player['second_name']):
+            player_id = id
+
+    next_match = fixture_data['fixtures'][gameweek]
+    opposition_team_id = next_match['team_a'] if next_match[
+        'is_home'] else next_match['team_h']
+    # Get data for all teams.
+    team_data = web_service.get_team_data()
+    for team in team_data:
+        if team['id'] == opposition_team_id:
+            opposition_team_name = team['name']
+    for id, name in opp_team_name_dict.items():
+        if name == opposition_team_name:
+            opposition_team_id = id
+    for id, name in was_home_dict.items():
+        if name == next_match['is_home']:
+            was_home = name
+    if player['element_type'] == 1:
+        position = 'GK'
+    elif player['element_type'] == 2:
+        position = 'DEF'
+    elif player['element_type'] == 3:
+        position = 'MID'
+    elif player['element_type'] == 4:
+        position = 'FWD'
+    for id, name in position_dict.items():
+        if name == position:
+            position_id = id
+    if player_id is not None:
+        categorical_data = torch.tensor([[player_id, opposition_team_id, position_id, was_home]], dtype=torch.int64)
+        numerical_data = torch.tensor([[2021, parser.isoparse(next_match['kickoff_time']).timestamp(), next_match['event'], player['now_cost'], next_match['event']]], dtype=torch.float)
+        model.eval()
+        expected_points = model(categorical_data, numerical_data).squeeze()
+    else:
+        # if we can't find the player, fall back to a naive average
+        expected_points = float(player['points_per_game'])
+
     injury_ratio = calculate_injury_multiplier(player)
-    fixture_ratio = calculate_fixture_multiplier(
-        player, fixture_data, gameweek)
     past_fixture_ratio = calculate_past_fixture_multiplier(player, fixture_data)
-    result = expected_points * injury_ratio * fixture_ratio * past_fixture_ratio
+    result = expected_points * injury_ratio * past_fixture_ratio
     logger.debug('Predicted points for {} {} in gameweek {}: {}'.format(player['first_name'], player['second_name'], gameweek, result))                                                                    
     return result
 
@@ -46,24 +91,6 @@ def calculate_injury_multiplier(player):
 
     logger.debug('Injury multiplier for {} {}: {}'.format(player['first_name'], player['second_name'], next_round_chance))
     return next_round_chance
-
-
-def calculate_fixture_multiplier(player, fixture_data, gameweek=0):
-    """
-    Given a player's json fixture object, calculate a fixture multiplier for
-    the expected points. This is calculated using each club's Elo rating.
-    """
-    next_match = fixture_data['fixtures'][gameweek]
-    team_id = player['team']
-    opposition_team_id = next_match['team_a'] if next_match[
-        'is_home'] else next_match['team_h']
-
-    team_elo = constants.CLUB_ELO_RATINGS[team_id]
-    opposition_team_elo = constants.CLUB_ELO_RATINGS[opposition_team_id]
-
-    normalised_adjustment = team_elo / opposition_team_elo
-    logger.debug('Fixture multiplier for {} {} in gameweek {}: {}'.format(player['first_name'], player['second_name'], gameweek, normalised_adjustment))
-    return normalised_adjustment
 
 def calculate_past_fixture_multiplier(player, fixture_data):
     """

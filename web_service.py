@@ -14,7 +14,6 @@ logger = logging.getLogger()
 # Create a session - this persists cookies across requests
 MY_SESSION = requests.Session()
 
-
 def get_deadline():
     """
     Get the next deadline for submitting transfers/team choice
@@ -24,6 +23,9 @@ def get_deadline():
     logger.info('Deadline is {}'.format(result))
     return result
 
+def get_team_data():
+    team_data = MY_SESSION.get(constants.FANTASY_API_URL).json()['teams']
+    return team_data
 
 def get_transfers_squad():
     """
@@ -196,40 +198,3 @@ def set_starting_lineup(starting_lineup):
         logger.error('Error setting starting lineup!', result)
     logger.debug('Set starting lineup successfully', result)
     return result
-
-
-def get_club_elo_ratings():
-    """
-    Get Elo ratings for all clubs as of the current date.
-    We will use these to calculate a fixture multiplier.
-    """
-    results_dict = {}
-
-    # Get data for all teams.
-    team_data = MY_SESSION.get(constants.FANTASY_API_URL).json()['teams']
-
-    # Get Elo data for today's date.
-    date_string = datetime.datetime.now().strftime('%Y-%m-%d')
-    elo_data = urllib.request.urlopen(constants.CLUB_ELO_URL + date_string)
-    parsed_elo_data = csv.reader(codecs.iterdecode(elo_data, 'utf-8'))
-
-    # Loop through the Elo data. When we find a premier league team,
-    # add it's ID and Elo to the results dictionary.
-    for line in parsed_elo_data:
-        if len(line) > 5:
-            elo_rating = line[4]
-            # Need to fix some of the names from the Elo website.
-            if line[1] == 'Tottenham':
-                club_name = 'Spurs'
-            elif line[1] == 'Man United':
-                club_name = 'Man Utd'
-            elif line[1] == 'Sheffield United':
-                club_name = 'Sheffield Utd'
-            else:
-                club_name = line[1]
-
-            for team in team_data:
-                if team['name'] == club_name:
-                    results_dict[team['id']] = float(elo_rating)
-    logger.debug('Got Elo ratings successfully', results_dict)
-    return results_dict

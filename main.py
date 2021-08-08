@@ -13,7 +13,7 @@ import constants
 import logging
 import sys
 from linear_solver import select_squad, select_squad_ignore_transfers, select_starting
-from web_service import create_transfers_object, get_club_elo_ratings, get_transfers_squad, login, make_transfers, set_starting_lineup
+from web_service import create_transfers_object, get_transfers_squad, login, make_transfers, set_starting_lineup
 
 # Set up the logger
 # Log info to stdout, debug to file
@@ -47,11 +47,6 @@ parser.add_argument('--apply', action='store_true', help='Whether to apply the c
 parser.add_argument('--ignore-squad', action='store_true', help='Whether to ignore the current squad when calculating the new squad (default: False)')
 
 args = parser.parse_args()
-
-# Get Elo data for clubs and save it to the constants
-# This will be a dictionary of team ids and corresponding Elo ratings
-logger.info('Getting Elo ratings')
-constants.CLUB_ELO_RATINGS = get_club_elo_ratings()
 
 # Login
 logger.info('Logging in to {}'.format(constants.LOGIN_URL))
