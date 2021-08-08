@@ -9,8 +9,8 @@ import urllib
 import requests
 import constants
 import logging
-logger = logging.getLogger()
 
+logger = logging.getLogger()
 # Create a session - this persists cookies across requests
 MY_SESSION = requests.Session()
 

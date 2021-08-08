@@ -1,20 +1,22 @@
-# pytorch mlp for regression
+"""
+Create a neural network to analyse the previous data and predict points using PyTorch
+"""
 from dateutil import parser
-from numpy import sqrt, stack, vstack
-from math import isnan
+from numpy import sqrt, stack
 from pandas import read_csv
-import torch
-from torch.utils.data import Dataset, DataLoader, random_split
-from torch import int64, Tensor
-from torch.nn import BatchNorm1d, ELU, Dropout, Embedding, Hardshrink, Linear, Module, ModuleList, MSELoss, ReLU, Sequential, Sigmoid
-from torch.nn.init import xavier_uniform_
+from torch.utils.data import random_split
+from torch.nn import BatchNorm1d, Dropout, Embedding, Linear, Module, ModuleList, MSELoss, ReLU, Sequential
 from torch.optim import SGD
+import logging
+import torch
+
+logger = logging.getLogger()
 
 class Model(Module):
     def __init__(self, embedding_size, num_numerical_cols):
         super().__init__()
         self.all_embeddings = ModuleList([Embedding(ni, nf) for ni, nf in embedding_size])
-        self.embedding_dropout = Dropout(0.01)
+        self.embedding_dropout = Dropout(0.04)
         self.batch_norm_num = BatchNorm1d(num_numerical_cols)
 
         all_layers = []
@@ -26,7 +28,7 @@ class Model(Module):
             all_layers.append(Linear(layer_size, new_layer_size))
             all_layers.append(ReLU(inplace=True))
             all_layers.append(BatchNorm1d(new_layer_size))
-            all_layers.append(Dropout(0.01))
+            all_layers.append(Dropout(0.001))
             layer_size = new_layer_size
 
         all_layers.append(Linear(layer_sizes[-1], 1))
@@ -70,7 +72,7 @@ def test_model(categorical_test_data, numerical_test_data, model, test_outputs):
         loss = loss_function(predictions, test_outputs)
     print('MSE: %.3f, RMSE: %.3f' % (loss, sqrt(loss)))
 
-def predict_points(categorical_data, numerical_data, model):
+def predict_points(name, opposition_team_name, ):
     """
     Make a points prediction for a row of data given the model.
     """
@@ -78,7 +80,7 @@ def predict_points(categorical_data, numerical_data, model):
     print(numerical_data)
     return model(categorical_data, numerical_data).squeeze()
 
-def get_model():
+def get_model(update_model):
     # prepare and load the data
     path = 'https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/cleaned_merged_seasons.csv'
     df = read_csv(path, index_col=0, dtype={
@@ -147,8 +149,6 @@ def get_model():
     numerical_data = torch.tensor(numerical_data, dtype=torch.float)
     outputs = torch.tensor(df[outputs].values, dtype=torch.float).flatten()
 
-    # print(dict(enumerate(df['name'].cat.categories)))
-
     # split the data into training and test data
     total_records = len(df)
     test_records = int(total_records * .2)
@@ -162,15 +162,19 @@ def get_model():
 
     # define the neural network model
     model = Model(categorical_embedding_sizes, numerical_data.shape[1])
-    print(model)
+    if update_model == True:
+        # train the model
+        train_model(categorical_train_data, numerical_train_data, model, train_outputs)
 
-    # train the model
-    train_model(categorical_train_data, numerical_train_data, model, train_outputs)
+        # test the model
+        test_model(categorical_test_data, numerical_test_data, model, test_outputs)
 
-    # test the model
-    test_model(categorical_test_data, numerical_test_data, model, test_outputs)
+        # save the model
+        torch.save(model.state_dict(), './model.pt')
+    else:
+        # load the model
+        model.load_state_dict(torch.load('./model.pt'))
 
     # return the model
+    model.eval()
     return df, model
-
-# get_model()

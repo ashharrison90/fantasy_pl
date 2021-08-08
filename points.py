@@ -9,8 +9,9 @@ import web_service
 from numpy import stack
 from dateutil import parser
 from torch import Tensor
+
 logger = logging.getLogger()
-df, model = get_model()
+df, model = get_model(True)
 
 def predict_points_multiple_gameweeks(player, fixture_data, num_gameweeks):
     """
@@ -46,12 +47,15 @@ def predict_points(player, fixture_data, gameweek=0):
     for team in team_data:
         if team['id'] == opposition_team_id:
             opposition_team_name = team['name']
+            break
     for id, name in opp_team_name_dict.items():
         if name == opposition_team_name:
             opposition_team_id = id
+            break
     for id, name in was_home_dict.items():
         if name == next_match['is_home']:
             was_home = name
+            break
     if player['element_type'] == 1:
         position = 'GK'
     elif player['element_type'] == 2:
@@ -63,10 +67,10 @@ def predict_points(player, fixture_data, gameweek=0):
     for id, name in position_dict.items():
         if name == position:
             position_id = id
+            break
     if player_id is not None:
         categorical_data = torch.tensor([[player_id, opposition_team_id, position_id, was_home]], dtype=torch.int64)
         numerical_data = torch.tensor([[2021, parser.isoparse(next_match['kickoff_time']).timestamp(), next_match['event'], player['now_cost'], next_match['event']]], dtype=torch.float)
-        model.eval()
         expected_points = model(categorical_data, numerical_data).squeeze()
     else:
         # if we can't find the player, fall back to a naive average

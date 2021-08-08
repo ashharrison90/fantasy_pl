@@ -8,10 +8,9 @@ import platform
 import pulp
 from points import predict_points, predict_points_multiple_gameweeks
 from web_service import get_all_player_data, get_player_fixtures
+
 logger = logging.getLogger()
-
 locale.setlocale(locale.LC_ALL, '')
-
 
 def select_squad(current_squad):
     """
