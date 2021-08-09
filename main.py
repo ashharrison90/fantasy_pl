@@ -52,7 +52,7 @@ parser.add_argument('--update-model', action='store_true', help='Whether to reca
 args = parser.parse_args()
 
 if not args.password:
-    args.password = getpass.getpass(prompt='Password for {}'.format(constants.LOGIN_URL))
+    args.password = getpass.getpass(prompt='Password for {}: '.format(constants.LOGIN_URL))
 
 # Login
 logger.info('Logging in to {}'.format(constants.LOGIN_URL))
