@@ -12,6 +12,7 @@ import codecs
 import constants
 import logging
 import sys
+from neural_network import load_model, save_model, test_model, train_model
 from linear_solver import select_squad, select_squad_ignore_transfers, select_starting
 from web_service import create_transfers_object, get_transfers_squad, login, make_transfers, set_starting_lineup
 
@@ -45,12 +46,24 @@ parser.add_argument('username', help='Login username for fantasy.premierleague.c
 parser.add_argument('password', help='Login password for fantasy.premierleague.com')
 parser.add_argument('--apply', action='store_true', help='Whether to apply the changes (default: False)')
 parser.add_argument('--ignore-squad', action='store_true', help='Whether to ignore the current squad when calculating the new squad (default: False)')
+parser.add_argument('--update-model', action='store_true', help='Whether to recalculate the model or use the stored one. Note: this can take a long time! (default: False)')
 
 args = parser.parse_args()
 
 # Login
 logger.info('Logging in to {}'.format(constants.LOGIN_URL))
 login(args.username, args.password)
+
+# Initialise the neural network
+logger.info('Initialising the neural network')
+if args.update_model:
+    logger.info('Updating the model')
+    train_model()
+    test_model()
+    save_model()
+else:
+    logger.info('Loading model')
+    load_model()
 
 # Get the current squad
 if not args.ignore_squad:
