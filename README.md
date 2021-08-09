@@ -16,22 +16,27 @@ git clone https://github.com/ashharrison90/fantasy_pl.git
 ## Running
 
 ```bash
-python3 main.py <FANTASY_PL_USERNAME> <FANTASY_PL_PASSWORD>
+python3 main.py <FANTASY_PL_USERNAME>
 ```
 
 This will use the current model stored under `model.pt`. To create a new model instead use (note: this may take a lot longer):
 ```bash
-python3 main.py <FANTASY_PL_USERNAME> <FANTASY_PL_PASSWORD> --update-model
+python3 main.py <FANTASY_PL_USERNAME> --update-model
 ```
 
 To automatically make the transfers and set the starting lineup, set the `--apply` flag:
 ```bash
-python3 main.py <FANTASY_PL_USERNAME> <FANTASY_PL_PASSWORD> --apply
+python3 main.py <FANTASY_PL_USERNAME> --apply
 ```
 
 To ignore the current squad when calculating a new squad (useful when starting the season/using a wildcard), set the `--ignore-squad` flag:
 ```bash
-python3 main.py <FANTASY_PL_USERNAME> <FANTASY_PL_PASSWORD> --ignore-squad
+python3 main.py <FANTASY_PL_USERNAME> --ignore-squad
+```
+
+You can optionally provide your password as a command line flag:
+```bash
+python3 main.py <FANTASY_PL_USERNAME> --password=<FANTASY_PL_PASSWORD>
 ```
 
 For help:

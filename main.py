@@ -15,6 +15,7 @@ import logging
 import neural_network
 import sys
 import web_service
+import getpass
 
 # Set up the logger
 # Log info to stdout, debug to file
@@ -43,12 +44,15 @@ if sys.stderr.encoding != 'UTF-8':
 # Set up the command line parser
 parser = argparse.ArgumentParser(description='Mr Robot v3.0')
 parser.add_argument('username', help='Login username for fantasy.premierleague.com')
-parser.add_argument('password', help='Login password for fantasy.premierleague.com')
+parser.add_argument('--password', help='Login password for fantasy.premierleague.com')
 parser.add_argument('--apply', action='store_true', help='Whether to apply the changes (default: False)')
 parser.add_argument('--ignore-squad', action='store_true', help='Whether to ignore the current squad when calculating the new squad (default: False)')
 parser.add_argument('--update-model', action='store_true', help='Whether to recalculate the model or use the stored one. Note: this can take a long time! (default: False)')
 
 args = parser.parse_args()
+
+if not args.password:
+    args.password = getpass.getpass(prompt='Password for {}'.format(constants.LOGIN_URL))
 
 # Login
 logger.info('Logging in to {}'.format(constants.LOGIN_URL))
