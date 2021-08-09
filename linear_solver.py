@@ -5,9 +5,9 @@ import constants
 import locale
 import logging
 import platform
+import points
 import pulp
-from points import predict_points, predict_points_multiple_gameweeks
-from web_service import get_all_player_data, get_player_fixtures
+import web_service
 
 logger = logging.getLogger()
 locale.setlocale(locale.LC_ALL, '')
@@ -31,11 +31,11 @@ def select_squad(current_squad):
     total_bank = squad_value + bank
 
     # Loop through every player and add them to the constraints
-    all_players = get_all_player_data()['elements']
+    all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
-        fixture_data = get_player_fixtures(player['id'])
-        player['expected_points'] = predict_points_multiple_gameweeks(player, fixture_data, 3)
-        expected_points_this_gameweek = predict_points(player, fixture_data)
+        fixture_data = web_service.get_player_fixtures(player['id'])
+        player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
+        expected_points_this_gameweek = points.predict_points(player, fixture_data)
         player['expected_points_this_gameweek'] = expected_points_this_gameweek
         player['selected'] = pulp.LpVariable(
             'player_' + str(player['id']), cat='Binary')
@@ -128,11 +128,11 @@ def select_squad_ignore_transfers(bank):
     new_squad_points = squad_value = num_goal = num_def = num_mid = num_att = num_cheap = 0
 
     # Loop through every player and add them to the constraints
-    all_players = get_all_player_data()['elements']
+    all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
-        fixture_data = get_player_fixtures(player['id'])
-        player['expected_points'] = predict_points_multiple_gameweeks(player, fixture_data, 3)
-        expected_points_this_gameweek = predict_points(player, fixture_data)
+        fixture_data = web_service.get_player_fixtures(player['id'])
+        player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
+        expected_points_this_gameweek = points.predict_points(player, fixture_data)
         player['expected_points_this_gameweek'] = expected_points_this_gameweek
         player['selected'] = pulp.LpVariable(
             'player_' + str(player['id']), cat='Binary')

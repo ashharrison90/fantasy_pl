@@ -10,11 +10,11 @@ The main program.
 import argparse
 import codecs
 import constants
+import linear_solver
 import logging
+import neural_network
 import sys
-from neural_network import load_model, save_model, test_model, train_model
-from linear_solver import select_squad, select_squad_ignore_transfers, select_starting
-from web_service import create_transfers_object, get_transfers_squad, login, make_transfers, set_starting_lineup
+import web_service
 
 # Set up the logger
 # Log info to stdout, debug to file
@@ -52,43 +52,44 @@ args = parser.parse_args()
 
 # Login
 logger.info('Logging in to {}'.format(constants.LOGIN_URL))
-login(args.username, args.password)
+web_service.login(args.username, args.password)
 
 # Initialise the neural network
 logger.info('Initialising the neural network')
+neural_network.init()
 if args.update_model:
     logger.info('Updating the model')
-    train_model()
-    test_model()
-    save_model()
+    neural_network.train_model()
+    neural_network.test_model()
+    neural_network.save_model()
 else:
     logger.info('Loading model')
-    load_model()
+    neural_network.load_model()
 
 # Get the current squad
 if not args.ignore_squad:
     logger.info('Retrieving the current squad')
-    CURRENT_SQUAD = get_transfers_squad()
+    CURRENT_SQUAD = web_service.get_transfers_squad()
 
 # Calculate the new squad
 logger.info('Calculating the new squad')
 if args.ignore_squad:
-    NEW_SQUAD = select_squad_ignore_transfers(constants.INITIAL_TEAM_VALUE)
+    NEW_SQUAD = linear_solver.select_squad_ignore_transfers(constants.INITIAL_TEAM_VALUE)
 else:
-    NEW_SQUAD = select_squad(CURRENT_SQUAD)
+    NEW_SQUAD = linear_solver.select_squad(CURRENT_SQUAD)
 
 # Calculate the new starting lineup
 logger.info('Calculating the new starting lineup')
-NEW_STARTING = select_starting(NEW_SQUAD)
+NEW_STARTING = linear_solver.select_starting(NEW_SQUAD)
 
 if args.apply:
     # make transfers to update the squad on fantasy.premierleague.com
     logger.info('Making transfers')
     WILDCARD_STATUS = (CURRENT_SQUAD['helper']['wildcard_status'] == 'available')
-    TRANSFER_OBJECT = create_transfers_object(
+    TRANSFER_OBJECT = web_service.create_transfers_object(
         CURRENT_SQUAD['picks'], NEW_SQUAD, (constants.NUM_CHANGES >= 6) and WILDCARD_STATUS)
-    make_transfers(TRANSFER_OBJECT)
+    web_service.make_transfers(TRANSFER_OBJECT)
 
     # update the starting lineup on fantasy.premierleague.com
     logger.info('Updating the starting lineup')
-    set_starting_lineup(NEW_STARTING)
+    web_service.set_starting_lineup(NEW_STARTING)

@@ -1,11 +1,10 @@
 """
 Functions used to calculate the expected points total for a given player.
 """
+import constants
 import logging
-from constants import TOTAL_GAMES_IN_SEASON
-from neural_network import predict_points
-from web_service import get_team_data
-from dateutil import parser
+import neural_network
+import web_service
 
 logger = logging.getLogger()
 
@@ -30,7 +29,7 @@ def predict_points(player, fixture_data, gameweek=0):
     opposition_team_id = next_match['team_a'] if next_match[
         'is_home'] else next_match['team_h']
     # Get data for all teams.
-    team_data = get_team_data()
+    team_data = web_service.get_team_data()
     for team in team_data:
         if team['id'] == opposition_team_id:
             opposition_team_name = team['name']
@@ -44,7 +43,7 @@ def predict_points(player, fixture_data, gameweek=0):
     elif player['element_type'] == 4:
         position = 'FWD'
     try:
-        expected_points = predict_points(
+        expected_points = neural_network.predict_points(
             '{} {}'.format(player['first_name'], player['second_name']),
             opposition_team_name,
             position,
@@ -97,6 +96,6 @@ def calculate_past_fixture_multiplier(player, fixture_data):
         multiplier = total_games / len(past_games)
     elif len(past_season_games):
         total_minutes = past_season_games[-1]['minutes']
-        multiplier = total_minutes / (TOTAL_GAMES_IN_SEASON * 90)
+        multiplier = total_minutes / (constants.TOTAL_GAMES_IN_SEASON * 90)
     logger.debug('Past fixture multiplier for {} {}: {}'.format(player['first_name'], player['second_name'], multiplier))
     return multiplier
