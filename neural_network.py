@@ -2,7 +2,7 @@
 Create a neural network to analyse the previous data and predict points using PyTorch
 """
 from dateutil import parser
-from numpy import sqrt, stack
+from numpy import random, sqrt, stack
 from pandas import read_csv
 from torch.utils.data import random_split
 from torch.nn import BatchNorm1d, Dropout, Embedding, Linear, Module, ModuleList, MSELoss, ReLU, Sequential
@@ -116,27 +116,25 @@ def init():
     categorical_column_sizes = [len(df[column].cat.categories) for column in categorical_columns]
     categorical_embedding_sizes = [(col_size, min(50, (col_size+1)//2)) for col_size in categorical_column_sizes]
 
-    # convert data into tensors of the correct format
-    categorical_data = stack([df[col].cat.codes.values for col in categorical_columns], 1)
-    categorical_data = torch.tensor(categorical_data, dtype=torch.int64)
-    numerical_data = stack([df[col].values for col in numerical_columns], 1)
-    numerical_data = torch.tensor(numerical_data, dtype=torch.float)
-    outputs = torch.tensor(df[outputs].values, dtype=torch.float).flatten()
-
     # split the data into training and test data
-    total_records = len(df)
-    # test_records = int(total_records * .2)
-    test_records = 0
+    msk = random.rand(len(df)) < 0.8
+    training_data = df[msk]
+    test_data = df[~msk]
 
-    categorical_train_data = categorical_data[:total_records-test_records]
-    categorical_test_data = categorical_data[total_records-test_records:total_records]
-    numerical_train_data = numerical_data[:total_records-test_records]
-    numerical_test_data = numerical_data[total_records-test_records:total_records]
-    train_outputs = outputs[:total_records-test_records]
-    test_outputs = outputs[total_records-test_records:total_records]
+    # convert data into tensors of the correct format
+    categorical_training_data = stack([training_data[col].cat.codes.values for col in categorical_columns], 1)
+    categorical_training_data = torch.tensor(categorical_training_data, dtype=torch.int64)
+    categorical_test_data = stack([test_data[col].cat.codes.values for col in categorical_columns], 1)
+    categorical_test_data = torch.tensor(categorical_test_data, dtype=torch.int64)
+    numerical_training_data = stack([training_data[col].values for col in numerical_columns], 1)
+    numerical_training_data = torch.tensor(numerical_training_data, dtype=torch.float)
+    numerical_test_data = stack([test_data[col].values for col in numerical_columns], 1)
+    numerical_test_data = torch.tensor(numerical_test_data, dtype=torch.float)
+    training_outputs = torch.tensor(training_data[outputs].values, dtype=torch.float).flatten()
+    test_outputs = torch.tensor(test_data[outputs].values, dtype=torch.float).flatten()
 
     # define the neural network model
-    model = Model(categorical_embedding_sizes, numerical_data.shape[1])
+    model = Model(categorical_embedding_sizes, numerical_training_data.shape[1])
 
 def get_player(player_name):
     name_dict = dict(enumerate(df['name'].cat.categories))
