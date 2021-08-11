@@ -60,7 +60,6 @@ web_service.login(args.username, args.password)
 
 # Initialise the neural network
 logger.info('Initialising the neural network')
-neural_network.init()
 if args.update_model:
     logger.info('Updating the model')
     neural_network.train_model()

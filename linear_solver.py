@@ -138,7 +138,7 @@ def select_squad_ignore_transfers(bank):
             'player_' + str(player['id']), cat='Binary')
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
-        new_squad_points += player['selected'] * player['expected_points_this_gameweek']
+        new_squad_points += player['selected'] * player['expected_points']
         squad_value += player['selected'] * player['now_cost']
         if player['now_cost'] <= 51.00:
             num_cheap += player['selected']

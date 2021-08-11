@@ -14,28 +14,23 @@ import torch
 
 logger = logging.getLogger()
 
-# Initialise these globals
-# They will be populated when init() is called
-df = None
-model = None
-
 class Model(Module):
     def __init__(self, embedding_size, num_numerical_cols):
         super().__init__()
         self.all_embeddings = ModuleList([Embedding(ni, nf) for ni, nf in embedding_size])
-        self.embedding_dropout = Dropout(0.04)
+        self.embedding_dropout = Dropout(0.1)
         self.batch_norm_num = BatchNorm1d(num_numerical_cols)
 
         all_layers = []
         num_categorical_cols = sum((nf for ni, nf in embedding_size))
         layer_size = num_categorical_cols + num_numerical_cols
 
-        layer_sizes = [1000, 500, 250]
+        layer_sizes = [100, 50, 25]
         for i, new_layer_size in enumerate(layer_sizes):
             all_layers.append(Linear(layer_size, new_layer_size))
             all_layers.append(ReLU(inplace=True))
             all_layers.append(BatchNorm1d(new_layer_size))
-            all_layers.append(Dropout(0.001))
+            all_layers.append(Dropout(0.2))
             layer_size = new_layer_size
 
         all_layers.append(Linear(layer_sizes[-1], 1))
@@ -52,89 +47,86 @@ class Model(Module):
         x = self.layers(x)
         return x
 
-def init():
-    global df
-    global model
-    # prepare and load the data
-    path = 'https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/cleaned_merged_seasons.csv'
-    df = read_csv(path, index_col=0, dtype={
-        'season_x': 'string',
-        'name': 'string',
-        'position': 'string',
-        'team_x': 'string',
-        'assists': int,
-        'bonus': int,
-        'bps': int,
-        'clean_sheets': int,
-        'creativity': float,
-        'element': int,
-        'fixture': int,
-        'goals_conceded': int,
-        'goals_scored': int,
-        'ict_index': float,
-        'influence': float,
-        'kickoff_time': 'string',
-        'minutes': int,
-        'opponent_team': int,
-        'opp_team_name': 'string',
-        'own_goals': int,
-        'penalties_missed': int,
-        'penalties_saved': int,
-        'red_cards': int,
-        'round': int,
-        'saves': int,
-        'selected': int,
-        'team_a_score': float,
-        'team_h_score': float,
-        'threat': float,
-        'total_points': int,
-        'transfers_balance': int,
-        'transfers_in': int,
-        'transfers_out': int,
-        'value': int,
-        'was_home': bool,
-        'yellow_cards': int,
-        'GW': int
-    })
-    # remove all values without any minutes played
-    df = df[df['minutes'] > 0]
-    # convert kickoff times to epoch timestamps
-    df['kickoff_time'] = df['kickoff_time'].apply(lambda x: parser.isoparse(x).timestamp())
-    # convert seasons to integers, e.g. '2019-2020' becomes 2019
-    df['season_x'] = df['season_x'].apply(lambda x: int(x.split('-')[0]))
+# prepare and load the data
+path = 'https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/cleaned_merged_seasons.csv'
+df = read_csv(path, index_col=0, dtype={
+    'season_x': 'string',
+    'name': 'string',
+    'position': 'string',
+    'team_x': 'string',
+    'assists': int,
+    'bonus': int,
+    'bps': int,
+    'clean_sheets': int,
+    'creativity': float,
+    'element': int,
+    'fixture': int,
+    'goals_conceded': int,
+    'goals_scored': int,
+    'ict_index': float,
+    'influence': float,
+    'kickoff_time': 'string',
+    'minutes': int,
+    'opponent_team': int,
+    'opp_team_name': 'string',
+    'own_goals': int,
+    'penalties_missed': int,
+    'penalties_saved': int,
+    'red_cards': int,
+    'round': int,
+    'saves': int,
+    'selected': int,
+    'team_a_score': float,
+    'team_h_score': float,
+    'threat': float,
+    'total_points': int,
+    'transfers_balance': int,
+    'transfers_in': int,
+    'transfers_out': int,
+    'value': int,
+    'was_home': bool,
+    'yellow_cards': int,
+    'GW': int
+})
+# remove all values without any minutes played
+df = df[df['minutes'] > 0]
+# convert kickoff times to epoch timestamps
+df['kickoff_time'] = df['kickoff_time'].apply(lambda x: parser.isoparse(x).timestamp())
+# convert seasons to integers, e.g. '2019-2020' becomes 2019
+df['season_x'] = df['season_x'].apply(lambda x: int(x.split('-')[0]))
 
-    # define the columns we're interested in
-    categorical_columns = ['name', 'opp_team_name', 'position', 'was_home']
-    numerical_columns = ['season_x', 'kickoff_time', 'round', 'value', 'GW']
-    outputs = ['total_points']
+# define the columns we're interested in
+categorical_columns = ['name', 'opp_team_name', 'position', 'was_home']
+numerical_columns = ['season_x', 'kickoff_time', 'round', 'value', 'GW']
+outputs = ['total_points']
 
-    # set categorical columns to have type=category
-    # these will be converted into unique integers
-    # calculate the categorical_embedding_size
-    for category in categorical_columns:
-        df[category] = df[category].astype('category')
-    categorical_column_sizes = [len(df[column].cat.categories) for column in categorical_columns]
-    categorical_embedding_sizes = [(col_size, min(50, (col_size+1)//2)) for col_size in categorical_column_sizes]
+# set categorical columns to have type=category
+# these will be converted into unique integers
+# calculate the categorical_embedding_size
+for category in categorical_columns:
+    df[category] = df[category].astype('category')
+categorical_column_sizes = [len(df[column].cat.categories) for column in categorical_columns]
+categorical_embedding_sizes = [(col_size, min(50, (col_size+1)//2)) for col_size in categorical_column_sizes]
 
-    # split the data into training and test data
-    msk = random.rand(len(df)) < 0.8
-    training_data = df[msk]
-    test_data = df[~msk]
+# split the data 80/20 into training and test data
+msk = random.rand(len(df)) < 0.8
+training_data = df[msk]
+test_data = df[~msk]
 
-    # convert data into tensors of the correct format
-    categorical_training_data = stack([training_data[col].cat.codes.values for col in categorical_columns], 1)
-    categorical_training_data = torch.tensor(categorical_training_data, dtype=torch.int64)
-    categorical_test_data = stack([test_data[col].cat.codes.values for col in categorical_columns], 1)
-    categorical_test_data = torch.tensor(categorical_test_data, dtype=torch.int64)
-    numerical_training_data = stack([training_data[col].values for col in numerical_columns], 1)
-    numerical_training_data = torch.tensor(numerical_training_data, dtype=torch.float)
-    numerical_test_data = stack([test_data[col].values for col in numerical_columns], 1)
-    numerical_test_data = torch.tensor(numerical_test_data, dtype=torch.float)
-    training_outputs = torch.tensor(training_data[outputs].values, dtype=torch.float).flatten()
-    test_outputs = torch.tensor(test_data[outputs].values, dtype=torch.float).flatten()
+# convert data into tensors of the correct format
+categorical_training_data = stack([training_data[col].cat.codes.values for col in categorical_columns], 1)
+categorical_training_data = torch.tensor(categorical_training_data, dtype=torch.int64)
+categorical_test_data = stack([test_data[col].cat.codes.values for col in categorical_columns], 1)
+categorical_test_data = torch.tensor(categorical_test_data, dtype=torch.int64)
+numerical_training_data = stack([training_data[col].values for col in numerical_columns], 1)
+numerical_training_data = torch.tensor(numerical_training_data, dtype=torch.float)
+numerical_test_data = stack([test_data[col].values for col in numerical_columns], 1)
+numerical_test_data = torch.tensor(numerical_test_data, dtype=torch.float)
+training_outputs = torch.tensor(training_data[outputs].values, dtype=torch.float).flatten()
+test_outputs = torch.tensor(test_data[outputs].values, dtype=torch.float).flatten()
 
-    # define the neural network model
-    model = Model(categorical_embedding_sizes, numerical_training_data.shape[1])
+# define the neural network model
+model = Model(categorical_embedding_sizes, len(numerical_columns))
 
 def get_player(player_name):
     name_dict = dict(enumerate(df['name'].cat.categories))
@@ -178,14 +170,14 @@ def train_model():
     model.train()
     # define the optimization
     loss_function = MSELoss()
-    optimizer = SGD(model.parameters(), lr=0.01, momentum=0.9)
-    epochs = 100
+    optimizer = SGD(model.parameters(), lr=0.001, momentum=0.9)
+    epochs = 500
     # enumerate epochs
     for epoch in range(epochs):
         # compute the model output
-        predictions = model(categorical_train_data, numerical_train_data).squeeze()
+        predictions = model(categorical_training_data, numerical_training_data).squeeze()
         # calculate loss compared to actual outputs
-        loss = loss_function(predictions, train_outputs)
+        loss = loss_function(predictions, training_outputs)
         logger.info('Epoch: {}/{}. Loss: {:.2f}'.format(epoch+1, epochs, loss))
         # clear the gradients
         optimizer.zero_grad()
