@@ -98,7 +98,6 @@ def login(username, password):
     constants.NEXT_EVENT = next(event for event in static_data['events'] if event['finished']==False)
     constants.SQUAD_ID = dynamic_data['player']['entry']
     constants.SQUAD_URL += str(constants.SQUAD_ID) + '/'
-    constants.TRANSFER_URL += str(constants.SQUAD_ID) + '/'
     constants.TRANSFER_DEADLINE = constants.NEXT_EVENT['deadline_time']
 
 
@@ -115,11 +114,10 @@ def create_transfers_object(old_squad, new_squad, use_wildcard=False):
     players_out = [player for player in old_squad if player[
         'element'] not in new_squad_ids]
     transfer_object = {
-        'confirmed': 'true',
         'entry': constants.SQUAD_ID,
         'event': constants.NEXT_EVENT,
         'transfers': [],
-        'wildcard': 'true' if use_wildcard else 'false'
+        'chip': 'true' if use_wildcard else 'false'
     }
 
     # We sort the players_in list by player_type as each transfer must be of the same type

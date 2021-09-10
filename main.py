@@ -88,7 +88,7 @@ NEW_STARTING = linear_solver.select_starting(NEW_SQUAD)
 if args.apply:
     # make transfers to update the squad on fantasy.premierleague.com
     logger.info('Making transfers')
-    WILDCARD_STATUS = (CURRENT_SQUAD['helper']['wildcard_status'] == 'available')
+    WILDCARD_STATUS = (next(x for x in CURRENT_SQUAD['chips'] if x['name'] == 'wildcard'))['status_for_entry'] == 'available'
     TRANSFER_OBJECT = web_service.create_transfers_object(
         CURRENT_SQUAD['picks'], NEW_SQUAD, (constants.NUM_CHANGES >= 6) and WILDCARD_STATUS)
     web_service.make_transfers(TRANSFER_OBJECT)
