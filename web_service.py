@@ -115,9 +115,9 @@ def create_transfers_object(old_squad, new_squad, use_wildcard=False):
         'element'] not in new_squad_ids]
     transfer_object = {
         'entry': constants.SQUAD_ID,
-        'event': constants.NEXT_EVENT,
+        'event': constants.NEXT_EVENT['id'],
         'transfers': [],
-        'chip': 'true' if use_wildcard else 'false'
+        'chip': True if use_wildcard else None
     }
 
     # We sort the players_in list by player_type as each transfer must be of the same type
