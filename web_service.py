@@ -162,12 +162,12 @@ def make_transfers(transfer_object):
         )
 
         if result.status_code != 200:
-            logger.error('Error making transfers!', result)
+            logger.error('Error making transfers: {}'.format(result))
     else:
         response_success = requests.Response
         response_success.status_code = 200
         result = response_success
-    logger.debug('Made transfers successfully', result)
+    logger.debug('Made transfers successfully: {}'.format(result))
     return result
 
 
@@ -193,6 +193,6 @@ def set_starting_lineup(starting_lineup):
     )
 
     if result.status_code != 200:
-        logger.error('Error setting starting lineup!', result)
-    logger.debug('Set starting lineup successfully', result)
+        logger.error('Error setting starting lineup: {}'.format(result))
+    logger.debug('Set starting lineup successfully: {}'.format(result))
     return result
