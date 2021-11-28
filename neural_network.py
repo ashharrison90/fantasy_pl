@@ -92,12 +92,10 @@ df = read_csv(path, index_col=0, dtype={
 df = df[df['minutes'] > 0]
 # convert kickoff times to epoch timestamps
 df['kickoff_time'] = df['kickoff_time'].apply(lambda x: parser.isoparse(x).timestamp())
-# convert seasons to integers, e.g. '2019-2020' becomes 2019
-df['season_x'] = df['season_x'].apply(lambda x: int(x.split('-')[0]))
 
 # define the columns we're interested in
-categorical_columns = ['name', 'opp_team_name', 'position', 'was_home']
-numerical_columns = ['season_x', 'kickoff_time', 'round', 'value', 'GW']
+categorical_columns = ['name', 'opp_team_name', 'position', 'season_x', 'was_home']
+numerical_columns = ['kickoff_time', 'round', 'value', 'GW']
 outputs = ['total_points']
 
 # set categorical columns to have type=category
