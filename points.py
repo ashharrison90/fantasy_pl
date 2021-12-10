@@ -25,15 +25,7 @@ def predict_points(player, fixture_data, gameweek=0):
     how many points a given player will score in the next gameweek.
     We use the highest out of 'form' and 'points_per_game'
     """
-    next_match = fixture_data['fixtures'][gameweek]
-    opposition_team_id = next_match['team_a'] if next_match[
-        'is_home'] else next_match['team_h']
-    # Get data for all teams.
-    team_data = web_service.get_team_data()
-    for team in team_data:
-        if team['id'] == opposition_team_id:
-            opposition_team_name = team['name']
-            break
+    expected_points = 0
     if player['element_type'] == 1:
         position = 'GK'
     elif player['element_type'] == 2:
@@ -42,24 +34,34 @@ def predict_points(player, fixture_data, gameweek=0):
         position = 'MID'
     elif player['element_type'] == 4:
         position = 'FWD'
-    try:
-        expected_points = neural_network.predict_points(
-            '{} {}'.format(player['first_name'], player['second_name']),
-            opposition_team_name,
-            position,
-            next_match['is_home'],
-            2021,
-            next_match['kickoff_time'],
-            next_match['event'],
-            player['now_cost'],
-            next_match['event']
-        )
-    except:
-        # if the model fails for some reason, fall back to a naive average
-        # this can happen for a few reasons:
-        #   - player is unknown (new player for this season)
-        #   - team is unknown (new team for this season)
-        expected_points = float(player['points_per_game'])
+    matches_this_gameweek = [x for x in fixture_data['fixtures'] if x['event'] == constants.NEXT_EVENT['id']]
+    for next_match in matches_this_gameweek:
+        opposition_team_id = next_match['team_a'] if next_match[
+            'is_home'] else next_match['team_h']
+        # Get data for all teams.
+        team_data = web_service.get_team_data()
+        for team in team_data:
+            if team['id'] == opposition_team_id:
+                opposition_team_name = team['name']
+                break
+        try:
+            expected_points += neural_network.predict_points(
+                '{} {}'.format(player['first_name'], player['second_name']),
+                opposition_team_name,
+                position,
+                next_match['is_home'],
+                2021,
+                next_match['kickoff_time'],
+                next_match['event'],
+                player['now_cost'],
+                next_match['event']
+            )
+        except:
+            # if the model fails for some reason, fall back to a naive average
+            # this can happen for a few reasons:
+            #   - player is unknown (new player for this season)
+            #   - team is unknown (new team for this season)
+            expected_points += float(player['points_per_game'])
 
     injury_ratio = calculate_injury_multiplier(player)
     past_fixture_ratio = calculate_past_fixture_multiplier(player, fixture_data)
