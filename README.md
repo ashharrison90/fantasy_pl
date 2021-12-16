@@ -1,6 +1,8 @@
 # fantasy_pl
 An attempt to write a fantasy football bot in a week.
 
+SDKHKAJShdkajdlk
+
 ## Requirements
 - Python 3
 - Python modules `numpy`, `pandas`, `pulp`, `requests`, `torch`:
