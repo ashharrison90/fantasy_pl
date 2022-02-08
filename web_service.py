@@ -162,7 +162,7 @@ def make_transfers(transfer_object):
         )
 
         if result.status_code != 200:
-            logger.error('Error making transfers: {}'.format(result))
+            logger.error('Error making transfers: {}'.format(result.json()))
     else:
         response_success = requests.Response
         response_success.status_code = 200
