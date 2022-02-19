@@ -82,7 +82,10 @@ def login(username, password):
     })
 
     login_headers = {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        # Without this, FPL will reject the automated login :|
+        # See https://github.com/sertalpbilal/FPL-Optimization-Tools/commit/93b633d59fe7176b171a2b133daa01aa85541c87
+        "user-agent": "Dalvik/2.1.0 (Linux; U; Android 6.0; Android SDK built for x86_64 Build/MASTER)",
     }
 
     result = MY_SESSION.post(
