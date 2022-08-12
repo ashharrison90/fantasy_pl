@@ -125,7 +125,6 @@ def create_transfers_object(old_squad, new_squad, use_wildcard=False):
 
     # We sort the players_in and players_out list by player_type
     # as each transfer must be of the same type
-    logger.debug('Players out: {}'.format(players_out))
     players_out = sorted(
         players_out, key=lambda player: (constants.PLAYERS[player['element']]['element_type']))
     players_in = sorted(
