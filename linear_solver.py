@@ -33,6 +33,7 @@ def select_squad(current_squad):
     # Loop through every player and add them to the constraints
     all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
+        constants.PLAYERS[player['id']] = player
         fixture_data = web_service.get_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
         expected_points_this_gameweek = points.predict_points(player, fixture_data)
@@ -130,6 +131,7 @@ def select_squad_ignore_transfers(bank):
     # Loop through every player and add them to the constraints
     all_players = web_service.get_all_player_data()['elements']
     for player in all_players:
+        constants.PLAYERS[player['id']] = player
         fixture_data = web_service.get_player_fixtures(player['id'])
         player['expected_points'] = points.predict_points_multiple_gameweeks(player, fixture_data, 3)
         expected_points_this_gameweek = points.predict_points(player, fixture_data)

@@ -120,11 +120,14 @@ def create_transfers_object(old_squad, new_squad, use_wildcard=False):
         'entry': constants.SQUAD_ID,
         'event': constants.NEXT_EVENT['id'],
         'transfers': [],
-        'chip': True if use_wildcard else None
+        'chip': 'wildcard' if use_wildcard else None
     }
 
-    # We sort the players_in list by player_type as each transfer must be of the same type
-    # players_out should already be sorted
+    # We sort the players_in and players_out list by player_type
+    # as each transfer must be of the same type
+    logger.debug('Players out: {}'.format(players_out))
+    players_out = sorted(
+        players_out, key=lambda player: (constants.PLAYERS[player['element']]['element_type']))
     players_in = sorted(
         players_in, key=lambda player: (player['element_type']))
 
