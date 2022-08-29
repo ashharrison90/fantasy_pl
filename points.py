@@ -50,7 +50,7 @@ def predict_points(player, fixture_data, gameweek=0):
                 opposition_team_name,
                 position,
                 next_match['is_home'],
-                2021,
+                constants.CURRENT_SEASON,
                 next_match['kickoff_time'],
                 next_match['event'],
                 player['now_cost'],
@@ -61,6 +61,7 @@ def predict_points(player, fixture_data, gameweek=0):
             # this can happen for a few reasons:
             #   - player is unknown (new player for this season)
             #   - team is unknown (new team for this season)
+            logger.exception('Model failed for {} {}, using naive estimate instead.'.format(player['first_name'], player['second_name']))
             expected_points += float(player['points_per_game'])
 
     injury_ratio = calculate_injury_multiplier(player)

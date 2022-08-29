@@ -162,6 +162,15 @@ def get_was_home(is_home):
             break
     return was_home
 
+def get_season_id(season):
+    season_dict = dict(enumerate(df['season_x'].cat.categories))
+    season_id = None
+    for key, value in season_dict.items():
+        if value == season:
+            season_id = key
+            break
+    return season_id
+
 # train the model
 def train_model():
     logger.info('Training the model. This could take a long time...')
@@ -203,8 +212,9 @@ def predict_points(player_name, opposition_team_name, position, is_home, season,
         opposition_team_id = get_team(opposition_team_name)
         position_id = get_position(position)
         was_home = get_was_home(is_home)
-        categorical_data = torch.tensor([[player_id, opposition_team_id, position_id, was_home]], dtype=torch.int64)
-        numerical_data = torch.tensor([[season, parser.isoparse(kickoff_time).timestamp(), round, cost, gameweek]], dtype=torch.float)
+        season_id = get_season_id(season)
+        categorical_data = torch.tensor([[player_id, opposition_team_id, position_id, season_id, was_home]], dtype=torch.int64)
+        numerical_data = torch.tensor([[parser.isoparse(kickoff_time).timestamp(), round, cost, gameweek]], dtype=torch.float)
         return model(categorical_data, numerical_data).squeeze()
 
 def load_model(path=DEFAULT_MODEL_PATH):
