@@ -85,9 +85,9 @@ else:
 logger.info('Calculating the new starting lineup')
 NEW_STARTING = linear_solver.select_starting(NEW_SQUAD)
 
-if args.apply:
+if args.apply or input('Apply these changes? (y/n): ').lower().strip() == 'y':
     # make transfers to update the squad on fantasy.premierleague.com
-    logger.info('Making transfers')
+    logger.info('Applying the transfers')
     WILDCARD_STATUS = (next(x for x in CURRENT_SQUAD['chips'] if x['name'] == 'wildcard'))['status_for_entry'] == 'available'
     TRANSFER_OBJECT = web_service.create_transfers_object(
         CURRENT_SQUAD['picks'], NEW_SQUAD, (constants.NUM_CHANGES >= 6) and WILDCARD_STATUS)
@@ -96,3 +96,5 @@ if args.apply:
     # update the starting lineup on fantasy.premierleague.com
     logger.info('Updating the starting lineup')
     web_service.set_starting_lineup(NEW_STARTING)
+else:
+    logger.info('Changes not applied')

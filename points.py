@@ -8,6 +8,10 @@ import web_service
 
 logger = logging.getLogger()
 
+# Store a dict of players that have had an error when predicting points
+# This is to avoid spamming the logs with the same error
+HAS_MODEL_ERROR = {}
+
 def predict_points_multiple_gameweeks(player, fixture_data, num_gameweeks):
     """
     Attempt to predict total number of points across multiple gameweeks
@@ -19,7 +23,7 @@ def predict_points_multiple_gameweeks(player, fixture_data, num_gameweeks):
     return result
 
 
-def predict_points(player, fixture_data, gameweek=0):
+def predict_points(player, fixture_data, gameweekOffset=0):
     """
     Given a player's json object, this function attempts to predict
     how many points a given player will score in the next gameweek.
@@ -34,7 +38,8 @@ def predict_points(player, fixture_data, gameweek=0):
         position = 'MID'
     elif player['element_type'] == 4:
         position = 'FWD'
-    matches_this_gameweek = [x for x in fixture_data['fixtures'] if x['event'] == constants.NEXT_EVENT['id']]
+    gameweek = constants.NEXT_EVENT['id'] + gameweekOffset
+    matches_this_gameweek = [x for x in fixture_data['fixtures'] if x['event'] == gameweek]
     for next_match in matches_this_gameweek:
         opposition_team_id = next_match['team_a'] if next_match[
             'is_home'] else next_match['team_h']
@@ -61,7 +66,9 @@ def predict_points(player, fixture_data, gameweek=0):
             # this can happen for a few reasons:
             #   - player is unknown (new player for this season)
             #   - team is unknown (new team for this season)
-            logger.exception('Model failed for {} {}, using naive estimate instead.'.format(player['first_name'], player['second_name']))
+            if player['id'] not in HAS_MODEL_ERROR:
+                logger.exception('Model failed for {} {}, using naive estimate instead.'.format(player['first_name'], player['second_name']))
+                HAS_MODEL_ERROR[player['id']] = True
             expected_points += float(player['points_per_game'])
 
     injury_ratio = calculate_injury_multiplier(player)
