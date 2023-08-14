@@ -10,7 +10,7 @@ import pulp
 import web_service
 
 logger = logging.getLogger()
-locale.setlocale(locale.LC_ALL, '')
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 def select_squad(current_squad):
     """
