@@ -11,7 +11,7 @@ SQUAD_URL = 'https://fantasy.premierleague.com/api/my-team/'
 TRANSFER_URL = 'https://fantasy.premierleague.com/api/transfers/'
 
 # Other constants
-CURRENT_SEASON = '2022-23'
+CURRENT_SEASON = '2023-24'
 NUM_CHANGES = 0
 TOTAL_GAMES_IN_SEASON = 38
 DEFAULT_MODEL_PATH = 'model.pt'

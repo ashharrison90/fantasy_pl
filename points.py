@@ -27,7 +27,6 @@ def predict_points(player, fixture_data, gameweekOffset=0):
     """
     Given a player's json object, this function attempts to predict
     how many points a given player will score in the next gameweek.
-    We use the highest out of 'form' and 'points_per_game'
     """
     expected_points = 0
     if player['element_type'] == 1:
