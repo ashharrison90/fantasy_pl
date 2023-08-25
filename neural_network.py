@@ -49,7 +49,7 @@ class Model(Module):
 
 # prepare and load the data
 path = 'https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/cleaned_merged_seasons.csv'
-df = read_csv(path, index_col=0, dtype={
+df = read_csv(path, index_col=False, dtype={
     'season_x': 'string',
     'name': 'string',
     'position': 'string',
