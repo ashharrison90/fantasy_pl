@@ -11,6 +11,7 @@ from constants import DEFAULT_MODEL_PATH
 import logging
 import os
 import torch
+import constants
 
 logger = logging.getLogger()
 
@@ -103,7 +104,13 @@ outputs = ['total_points']
 # calculate the categorical_embedding_size
 for category in categorical_columns:
     df[category] = df[category].astype('category')
-categorical_column_sizes = [len(df[column].cat.categories) for column in categorical_columns]
+categorical_column_sizes = [];
+for column in categorical_columns:
+    # handle the case where the new season id is not in the data
+    if column == 'season_x' and constants.CURRENT_SEASON not in df[column].cat.categories:
+        categorical_column_sizes.append(len(df[column].cat.categories) + 1)
+    else:
+        categorical_column_sizes.append(len(df[column].cat.categories))
 categorical_embedding_sizes = [(col_size, min(50, (col_size+1)//2)) for col_size in categorical_column_sizes]
 
 # split the data 80/20 into training and test data
@@ -169,7 +176,8 @@ def get_season_id(season):
         if value == season:
             season_id = key
             break
-    return season_id
+    # handle the case where the new season id is not in the data
+    return season_id if season_id is not None else len(season_dict)
 
 # train the model
 def train_model():
@@ -211,8 +219,8 @@ def predict_points(player_name, opposition_team_name, position, is_home, season,
         player_id = get_player(player_name)
         opposition_team_id = get_team(opposition_team_name)
         position_id = get_position(position)
-        was_home = get_was_home(is_home)
         season_id = get_season_id(season)
+        was_home = get_was_home(is_home)
         categorical_data = torch.tensor([[player_id, opposition_team_id, position_id, season_id, was_home]], dtype=torch.int64)
         numerical_data = torch.tensor([[parser.isoparse(kickoff_time).timestamp(), round, cost, gameweek]], dtype=torch.float)
         return model(categorical_data, numerical_data).squeeze()
