@@ -36,12 +36,12 @@ python3 main.py <FANTASY_PL_USERNAME> --ignore-squad
 
 You can optionally provide your password as a command line flag:
 ```bash
-python3 main.py <FANTASY_PL_USERNAME> --password=<FANTASY_PL_PASSWORD>
+python3 main.py <FANTASY_PL_USERNAME> --password <FANTASY_PL_PASSWORD>
 ```
 
 You can specify the log level for stdout:
 ```bash
-python3 main.py <FANTASY_PL_USERNAME> --log-level=DEBUG
+python3 main.py <FANTASY_PL_USERNAME> --log-level debug
 ```
 
 For help:
