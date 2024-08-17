@@ -17,12 +17,32 @@ import sys
 import web_service
 import getpass
 
+logLevels = {
+    'debug': logging.DEBUG,
+    'info': logging.INFO,
+    'warn': logging.WARN
+}
+
+# Set up the command line parser
+parser = argparse.ArgumentParser(description='Mr Robot v3.0')
+parser.add_argument('username', help='Login username for fantasy.premierleague.com')
+parser.add_argument('--password', help='Login password for fantasy.premierleague.com')
+parser.add_argument('--apply', action='store_true', help='Whether to apply the changes (default: False)')
+parser.add_argument('--ignore-squad', action='store_true', help='Whether to ignore the current squad when calculating the new squad (default: False)')
+parser.add_argument('--update-model', action='store_true', help='Whether to recalculate the model or use the stored one. Note: this can take a long time! (default: False)')
+parser.add_argument('--log-level', choices=list(logLevels.keys()), help='Set the logging level (default: "info")', default='info')
+
+args = parser.parse_args()
+
+if not args.password:
+    args.password = getpass.getpass(prompt='Password for {}: '.format(constants.LOGIN_URL))
+
 # Set up the logger
 # Log info to stdout, debug to file
 fileHandler = logging.FileHandler('./.debug.log', 'w')
 fileHandler.setLevel(logging.DEBUG)
 consoleHandler = logging.StreamHandler(sys.stdout)
-consoleHandler.setLevel(logging.INFO)
+consoleHandler.setLevel(logLevels[args.log_level])
 logging.basicConfig(
     handlers=[
         consoleHandler,
@@ -40,19 +60,6 @@ if sys.stdout.encoding != 'UTF-8':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
 if sys.stderr.encoding != 'UTF-8':
     sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
-
-# Set up the command line parser
-parser = argparse.ArgumentParser(description='Mr Robot v3.0')
-parser.add_argument('username', help='Login username for fantasy.premierleague.com')
-parser.add_argument('--password', help='Login password for fantasy.premierleague.com')
-parser.add_argument('--apply', action='store_true', help='Whether to apply the changes (default: False)')
-parser.add_argument('--ignore-squad', action='store_true', help='Whether to ignore the current squad when calculating the new squad (default: False)')
-parser.add_argument('--update-model', action='store_true', help='Whether to recalculate the model or use the stored one. Note: this can take a long time! (default: False)')
-
-args = parser.parse_args()
-
-if not args.password:
-    args.password = getpass.getpass(prompt='Password for {}: '.format(constants.LOGIN_URL))
 
 # Login
 logger.info('Logging in to {}'.format(constants.LOGIN_URL))

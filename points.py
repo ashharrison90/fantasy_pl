@@ -60,13 +60,14 @@ def predict_points(player, fixture_data, gameweekOffset=0):
                 player['now_cost'],
                 next_match['event']
             )
-        except:
+        except Exception as e:
             # if the model fails for some reason, fall back to a naive average
             # this can happen for a few reasons:
             #   - player is unknown (new player for this season)
             #   - team is unknown (new team for this season)
             if player['id'] not in HAS_MODEL_ERROR:
-                logger.exception('Model failed for {} {}, using naive estimate instead.'.format(player['first_name'], player['second_name']))
+                logger.info('Model failed for {} {}, using naive estimate instead.'.format(player['first_name'], player['second_name']))
+                logger.debug(e, exc_info=True)
                 HAS_MODEL_ERROR[player['id']] = True
             expected_points += float(player['points_per_game'])
 

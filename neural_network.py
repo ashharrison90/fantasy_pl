@@ -227,7 +227,7 @@ def predict_points(player_name, opposition_team_name, position, is_home, season,
 
 def load_model(path=DEFAULT_MODEL_PATH):
     logger.info('Loading model from {}'.format(os.path.join(os.getcwd(), path)))
-    model.load_state_dict(torch.load(path))
+    model.load_state_dict(torch.load(path, weights_only=True))
 
 def save_model(path=DEFAULT_MODEL_PATH):
     logger.info('Saving model to {}'.format(os.path.join(os.getcwd(), path)))
