@@ -11,6 +11,9 @@ logger = logging.getLogger()
 # Store a dict of players that have had an error when predicting points
 # This is to avoid spamming the logs with the same error
 HAS_MODEL_ERROR = {}
+# Same here, maintain a cache of multipliers to avoid recalculating
+INJURY_MULTIPLIERS = {}
+PAST_FIXTURE_MULTIPLIERS = {}
 
 def predict_points_multiple_gameweeks(player, fixture_data, num_gameweeks):
     """
@@ -85,10 +88,14 @@ def calculate_injury_multiplier(player):
     is expected to score 10 points, but is only 50% likely to play, the expected points
     are adjusted to 10*0.5 = 5
     """
-    next_round_chance = player['chance_of_playing_next_round'] / 100 if player[
-        'chance_of_playing_next_round'] is not None else 1
+    if player['id'] not in INJURY_MULTIPLIERS:
+        next_round_chance = player['chance_of_playing_next_round'] / 100 if player[
+            'chance_of_playing_next_round'] is not None else 1
+        INJURY_MULTIPLIERS[player['id']] = next_round_chance
+        logger.debug('Injury multiplier for {} {}: {}'.format(player['first_name'], player['second_name'], next_round_chance))
+    else:
+        next_round_chance = INJURY_MULTIPLIERS[player['id']]
 
-    logger.debug('Injury multiplier for {} {}: {}'.format(player['first_name'], player['second_name'], next_round_chance))
     return next_round_chance
 
 def calculate_past_fixture_multiplier(player, fixture_data):
@@ -98,14 +105,18 @@ def calculate_past_fixture_multiplier(player, fixture_data):
     possible minutes. Prevents players being chosen who barely play but have a very
     high points per game.
     """
-    past_games = fixture_data['history']
-    past_season_games = fixture_data['history_past']
     multiplier = 1
-    if len(past_games):
-        total_games = sum(1 if fixture['minutes'] > 0 else 0 for fixture in past_games)
-        multiplier = total_games / len(past_games)
-    elif len(past_season_games):
-        total_minutes = past_season_games[-1]['minutes']
-        multiplier = total_minutes / (constants.TOTAL_GAMES_IN_SEASON * 90)
-    logger.debug('Past fixture multiplier for {} {}: {}'.format(player['first_name'], player['second_name'], multiplier))
+    if player['id'] not in PAST_FIXTURE_MULTIPLIERS:
+        past_games = fixture_data['history']
+        past_season_games = fixture_data['history_past']
+        if len(past_games):
+            total_games = sum(1 if fixture['minutes'] > 0 else 0 for fixture in past_games)
+            multiplier = total_games / len(past_games)
+        elif len(past_season_games):
+            total_minutes = past_season_games[-1]['minutes']
+            multiplier = total_minutes / (constants.TOTAL_GAMES_IN_SEASON * 90)
+        PAST_FIXTURE_MULTIPLIERS[player['id']] = multiplier
+        logger.debug('Past fixture multiplier for {} {}: {}'.format(player['first_name'], player['second_name'], multiplier))
+    else:
+        multiplier = PAST_FIXTURE_MULTIPLIERS[player['id']]
     return multiplier
