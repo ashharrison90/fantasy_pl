@@ -19,7 +19,7 @@ git clone https://github.com/ashharrison90/fantasy_pl.git
 python3 main.py <FANTASY_PL_USERNAME>
 ```
 
-This will use the current model stored under `model.pt`. To create a new model instead use (note: this may take a lot longer):
+This will use the current model stored under `data/model.pt`. To create a new model instead use (note: this may take a lot longer):
 ```bash
 python3 main.py <FANTASY_PL_USERNAME> --update-model
 ```

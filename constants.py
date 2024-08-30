@@ -14,7 +14,7 @@ TRANSFER_URL = 'https://fantasy.premierleague.com/api/transfers/'
 CURRENT_SEASON = '2024-25'
 NUM_CHANGES = 0
 TOTAL_GAMES_IN_SEASON = 38
-DEFAULT_MODEL_PATH = 'model.pt'
+DEFAULT_MODEL_PATH = './data/model.pt'
 
 # Data we grab from the web services
 NEXT_EVENT = None

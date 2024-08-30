@@ -49,7 +49,7 @@ class Model(Module):
         return x
 
 # prepare and load the data
-path = 'https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/cleaned_merged_seasons.csv'
+path = './data/cleaned_merged_seasons.csv'
 df = read_csv(path, index_col=False, dtype={
     'season_x': 'string',
     'name': 'string',
@@ -186,7 +186,7 @@ def train_model():
     # define the optimization
     loss_function = MSELoss()
     optimizer = SGD(model.parameters(), lr=0.001, momentum=0.9)
-    epochs = 500
+    epochs = 5000
     # enumerate epochs
     for epoch in range(epochs):
         # compute the model output
