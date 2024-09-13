@@ -12,7 +12,7 @@ import web_service
 logger = logging.getLogger()
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
-def select_squad(current_squad):
+def select_squad(current_squad, ignore_transfer_cost):
     """
     Given the current squad, calculate the best possible squad for next week.
     """
@@ -74,7 +74,7 @@ def select_squad(current_squad):
         upBound=free_transfers
     )
     transfer_cost = ((num_changes - free_transfers_used)
-                     * constants.TRANSFER_POINT_DEDUCTION)
+                     * constants.TRANSFER_POINT_DEDUCTION) if not ignore_transfer_cost else 0
 
     # Add problem and constraints
     squad_prob += new_squad_points - transfer_cost

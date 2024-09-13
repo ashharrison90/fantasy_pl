@@ -28,6 +28,7 @@ parser = argparse.ArgumentParser(description='Mr Robot v3.0')
 parser.add_argument('username', help='Login username for fantasy.premierleague.com')
 parser.add_argument('--password', help='Login password for fantasy.premierleague.com')
 parser.add_argument('--apply', action='store_true', help='Whether to apply the changes (default: False)')
+parser.add_argument('--wildcard', action='store_true', help='Use to ignore transfer costs when calculating the new lineup (default: False)')
 parser.add_argument('--ignore-squad', action='store_true', help='Whether to ignore the current squad when calculating the new squad (default: False)')
 parser.add_argument('--update-model', action='store_true', help='Whether to recalculate the model or use the stored one. Note: this can take a long time! (default: False)')
 parser.add_argument('--log-level', choices=list(logLevels.keys()), help='Set the logging level (default: "info")', default='info')
@@ -86,7 +87,7 @@ logger.info('Calculating the new squad')
 if args.ignore_squad:
     NEW_SQUAD = linear_solver.select_squad_ignore_transfers(constants.INITIAL_TEAM_VALUE)
 else:
-    NEW_SQUAD = linear_solver.select_squad(CURRENT_SQUAD)
+    NEW_SQUAD = linear_solver.select_squad(CURRENT_SQUAD, args.wildcard)
 
 # Calculate the new starting lineup
 logger.info('Calculating the new starting lineup')
@@ -97,7 +98,7 @@ if args.apply or input('Apply these changes? (y/n): ').lower().strip() == 'y':
     logger.info('Applying the transfers')
     WILDCARD_STATUS = (next(x for x in CURRENT_SQUAD['chips'] if x['name'] == 'wildcard'))['status_for_entry'] == 'available'
     TRANSFER_OBJECT = web_service.create_transfers_object(
-        CURRENT_SQUAD['picks'], NEW_SQUAD, (constants.NUM_CHANGES >= 6) and WILDCARD_STATUS)
+        CURRENT_SQUAD['picks'], NEW_SQUAD, args.wildcard or ((constants.NUM_CHANGES >= 6) and WILDCARD_STATUS))
     web_service.make_transfers(TRANSFER_OBJECT)
 
     # update the starting lineup on fantasy.premierleague.com
