@@ -16,6 +16,7 @@ import neural_network
 import sys
 import web_service
 import getpass
+import datetime
 
 logLevels = {
     'debug': logging.DEBUG,
@@ -28,6 +29,7 @@ parser = argparse.ArgumentParser(description='Mr Robot v3.0')
 parser.add_argument('username', help='Login username for fantasy.premierleague.com')
 parser.add_argument('--password', help='Login password for fantasy.premierleague.com')
 parser.add_argument('--apply', action='store_true', help='Whether to apply the changes (default: False)')
+parser.add_argument('--check-deadline', action='store_true', help='Check the deadline is the same day before running the script (default: False)')
 parser.add_argument('--wildcard', action='store_true', help='Use to ignore transfer costs when calculating the new lineup (default: False)')
 parser.add_argument('--ignore-squad', action='store_true', help='Whether to ignore the current squad when calculating the new squad (default: False)')
 parser.add_argument('--update-model', action='store_true', help='Whether to recalculate the model or use the stored one. Note: this can take a long time! (default: False)')
@@ -65,6 +67,18 @@ if sys.stderr.encoding != 'UTF-8':
 # Login
 logger.info('Logging in to {}'.format(constants.LOGIN_URL))
 web_service.login(args.username, args.password)
+
+if args.check_deadline:
+    # Check deadline is today
+    logger.info('Checking the deadline')
+    today = datetime.datetime.now().strftime('%Y-%m-%d')
+    logger.debug('Today is {}'.format(today))
+    deadline = web_service.get_deadline_date()
+    if not deadline == today:
+        logger.info('Deadline is not today, exiting')
+        sys.exit()
+    else:
+        logger.info('Deadline is today, continuing')
 
 # Initialise the neural network
 logger.info('Initialising the neural network')

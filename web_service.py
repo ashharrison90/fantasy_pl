@@ -1,9 +1,6 @@
 """
 Functions to manage CRUD operations on fantasy.premierleague.com.
 """
-import codecs
-import csv
-import datetime
 import json
 import urllib
 import requests
@@ -14,12 +11,15 @@ logger = logging.getLogger()
 # Create a session - this persists cookies across requests
 MY_SESSION = requests.Session()
 
-def get_deadline():
+def get_deadline_date():
     """
     Get the next deadline for submitting transfers/team choice
     """
     static_data = MY_SESSION.get(constants.FANTASY_API_URL).json()
-    result = static_data['next_event_fixtures'][0]['deadline_time']
+    events = static_data['events'];
+    next_event = next(x for x in events if x["is_next"] == True)
+    logger.debug('Next event is {}'.format(next_event))
+    result = next_event['deadline_time'].split('T')[0]
     logger.info('Deadline is {}'.format(result))
     return result
 
