@@ -27,4 +27,4 @@ jobs:
       env:
         FANTASY_PL_USERNAME: ${{ secrets.FANTASY_PL_USERNAME }}
         FANTASY_PL_PASSWORD: ${{ secrets.FANTASY_PL_PASSWORD }}
-      run: python3 main.py $FANTASY_PL_USERNAME --password $FANTASY_PL_PASSWORD --log-level debug --apply
+      run: python3 main.py $FANTASY_PL_USERNAME --password $FANTASY_PL_PASSWORD --log-level debug --apply --check-deadline
