@@ -34,6 +34,7 @@ parser.add_argument('--wildcard', action='store_true', help='Use to ignore trans
 parser.add_argument('--ignore-squad', action='store_true', help='Whether to ignore the current squad when calculating the new squad (default: False)')
 parser.add_argument('--update-model', action='store_true', help='Whether to recalculate the model or use the stored one. Note: this can take a long time! (default: False)')
 parser.add_argument('--log-level', choices=list(logLevels.keys()), help='Set the logging level (default: "info")', default='info')
+parser.add_argument('--budget', type=int, help='Set the budget', default=1000)
 
 args = parser.parse_args()
 
@@ -99,7 +100,7 @@ if not args.ignore_squad:
 # Calculate the new squad
 logger.info('Calculating the new squad')
 if args.ignore_squad:
-    NEW_SQUAD = linear_solver.select_squad_ignore_transfers(constants.INITIAL_TEAM_VALUE)
+    NEW_SQUAD = linear_solver.select_squad_ignore_transfers(args.budget)
 else:
     NEW_SQUAD = linear_solver.select_squad(CURRENT_SQUAD, args.wildcard)
 
