@@ -22,7 +22,7 @@ def select_squad(current_squad, ignore_transfer_cost):
     # Define and get some necessary constants
     teams_represented = [0] * 20
     new_squad = []
-    new_squad_points = num_changes = num_goal = num_def = num_mid = num_att = num_cheap = 0
+    new_squad_points = num_changes = num_goal = num_def = num_mid = num_att = num_cheap = num_cheap_gk = 0
     current_squad_ids = [player['element']
                          for player in current_squad['picks']]
     free_transfers = max(0, current_squad['transfers']['limit'] or 0)
@@ -43,8 +43,10 @@ def select_squad(current_squad, ignore_transfer_cost):
         teams_represented[player['team'] - 1] += player['selected']
         player_type = player['element_type']
         new_squad_points += player['selected'] * player['expected_points_this_gameweek']
-        if player['now_cost'] <= 51.00:
+        if player['now_cost'] <= 48.00:
             num_cheap += player['selected']
+            if player_type == 1:
+                num_cheap_gk += player['selected']
         logger.info('Predicted points for {} {}: {:.2f}'.format(player['first_name'], player['second_name'], expected_points_this_gameweek))
 
         if player_type == 1:
@@ -92,6 +94,7 @@ def select_squad(current_squad, ignore_transfer_cost):
     # Instead, write the condition as having at least 4 cheap players.
     # This effectively gives us a limit for the whole bench.
     squad_prob += (num_cheap >= 4)
+    squad_prob += (num_cheap_gk >= 1)
 
     # Solve! On the pi, we need to use the GLPK solver.
     if platform.system() == 'Linux':
@@ -126,7 +129,7 @@ def select_squad_ignore_transfers(bank):
     # Define and get some necessary constants
     teams_represented = [0] * 20
     new_squad = []
-    new_squad_points = squad_value = num_goal = num_def = num_mid = num_att = num_cheap = 0
+    new_squad_points = squad_value = num_goal = num_def = num_mid = num_att = num_cheap = num_cheap_gk = 0
 
     # Loop through every player and add them to the constraints
     all_players = web_service.get_all_player_data()['elements']
@@ -142,8 +145,10 @@ def select_squad_ignore_transfers(bank):
         player_type = player['element_type']
         new_squad_points += player['selected'] * player['expected_points']
         squad_value += player['selected'] * player['now_cost']
-        if player['now_cost'] <= 51.00:
+        if player['now_cost'] <= 48.00:
             num_cheap += player['selected']
+            if player_type == 1:
+                num_cheap_gk += player['selected']
         logger.info('Predicted points for {} {}: {:.2f}'.format(player['first_name'], player['second_name'], expected_points_this_gameweek))
 
         if player_type == 1:
@@ -169,6 +174,7 @@ def select_squad_ignore_transfers(bank):
     # Instead, write the condition as having at least 4 cheap players.
     # This effectively gives us a limit for the whole bench.
     squad_prob += (num_cheap >= 4)
+    squad_prob += (num_cheap_gk >= 1)
 
     # Solve! On the pi, we need to use the GLPK solver.
     if platform.system() == 'Linux':
