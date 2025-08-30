@@ -101,8 +101,8 @@ def calculate_injury_multiplier(player):
 def calculate_past_fixture_multiplier(player, fixture_data):
     """
     Given a player's json fixture object, calculate a past fixture multiplier for
-    the expected points. This is a ratio of total minutes played divided by total
-    possible minutes. Prevents players being chosen who barely play but have a very
+    the expected points. This is a ratio of games played with more than 60 minutes divided by total
+    possible games. Prevents players being chosen who barely play but have a very
     high points per game.
     """
     multiplier = 1
@@ -110,7 +110,7 @@ def calculate_past_fixture_multiplier(player, fixture_data):
         past_games = fixture_data['history']
         past_season_games = fixture_data['history_past']
         if len(past_games):
-            total_games = sum(1 if fixture['minutes'] > 0 else 0 for fixture in past_games)
+            total_games = sum(1 if fixture['minutes'] > 60 else 0 for fixture in past_games)
             multiplier = total_games / len(past_games)
         elif len(past_season_games):
             total_minutes = past_season_games[-1]['minutes']

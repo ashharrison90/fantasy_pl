@@ -18,7 +18,7 @@ DEFAULT_MODEL_PATH = './data/model.pt'
 
 # Data we grab from the web services
 NEXT_EVENT = None
-SQUAD_ID = None
+SQUAD_ID = 7729519
 TRANSFER_DEADLINE = None
 PLAYERS = {}
 

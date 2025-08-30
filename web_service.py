@@ -2,10 +2,10 @@
 Functions to manage CRUD operations on fantasy.premierleague.com.
 """
 import json
-import urllib
 import requests
 import constants
 import logging
+from playwright.sync_api import sync_playwright
 
 logger = logging.getLogger()
 # Create a session - this persists cookies across requests
@@ -63,39 +63,38 @@ def get_player_fixtures(player_id):
 
 def login(username, password):
     """
-    Login to the fantasy football web app.
+    Login to the fantasy football web app via playwright to grab the bearer token.
     """
     logger.info('Logging in to {} with username {}'.format(constants.LOGIN_URL, username))
 
-    # Make a GET request to users.premierleague.com to get the correct cookies
-    MY_SESSION.get(constants.LOGIN_URL)
-    csrf_token = MY_SESSION.cookies.get(
-        'csrftoken', domain='users.premierleague.com')
+    # Login via playwright to get the bearer token
+    with sync_playwright() as playwright:
+        chromium = playwright.chromium
+        browser = chromium.launch()
+        page = browser.new_page()
+        page.goto("https://fantasy.premierleague.com/")
+        page.get_by_role("button", name="Reject All").click()
+        page.get_by_role("button", name="Log in").click()
+        page.get_by_role("textbox", name="Email address").fill(username)
+        page.get_by_role("textbox", name="Password").fill(password)
+        page.get_by_role("button", name="Sign in", exact=True).click()
+        page.wait_for_url('https://fantasy.premierleague.com/');
+        bearerToken = page.evaluate("""
+            () => {
+                for (i = 0; i < window.localStorage.length; i++) {
+                    const key = window.localStorage.key(i);
+                    if (key.startsWith("oidc")) {
+                        return JSON.parse(window.localStorage.getItem(key)).access_token
+                    }
+                }
+            }
+        """)
+        browser.close()
 
-    # POST to the users url with the login credentials and csrfcookie
-    login_data = urllib.parse.urlencode({
-        'csrfmiddlewaretoken': csrf_token,
-        'login': username,
-        'password': password,
-        'app': 'plusers',
-        'redirect_uri': 'https://users.premierleague.com/'
+    MY_SESSION.headers.update({
+        'x-api-authorization': 'Bearer {}'.format(bearerToken),
     })
 
-    login_headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        # Without this, FPL will reject the automated login :|
-        # See https://github.com/sertalpbilal/FPL-Optimization-Tools/commit/93b633d59fe7176b171a2b133daa01aa85541c87
-        "user-agent": "Dalvik/2.1.0 (Linux; U; Android 6.0; Android SDK built for x86_64 Build/MASTER)",
-    }
-
-    result = MY_SESSION.post(
-        constants.LOGIN_URL, headers=login_headers, data=login_data)
-    if result.status_code != 200:
-        logger.error('Error logging in!', result)
-
-    # Make a GET request to fantasy.premierleague.com to get the correct
-    # cookies
-    MY_SESSION.get(constants.FANTASY_URL)
     dynamic_data = MY_SESSION.get(constants.FANTASY_API_DYNAMIC_URL).json()
     static_data = MY_SESSION.get(constants.FANTASY_API_URL).json()
     constants.NEXT_EVENT = next(event for event in static_data['events'] if event['finished']==False)

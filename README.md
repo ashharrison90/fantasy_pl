@@ -3,9 +3,9 @@ An attempt to write a fantasy football bot in a week.
 
 ## Requirements
 - Python 3
-- Python modules `numpy`, `pandas`, `pulp`, `requests`, `torch`:
-  - `pip3 install numpy`
-  - `pip3 install pandas pulp requests torch`
+- Python modules `numpy`, `pandas`, `playwright`, `pulp`, `requests`, `torch`:
+  - `pip3 install -r requirements.txt`
+  - `playwright install --with-deps chromium`
 
 ## Installation
 
