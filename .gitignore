@@ -2,4 +2,5 @@
 __pycache__/
 .tags
 .debug.log
-playwright_debug/
+playwright_videos/
+./trace.zip

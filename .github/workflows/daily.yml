@@ -30,5 +30,13 @@ jobs:
       uses: actions/upload-artifact@v4
       if: failure()
       with:
-        path: ./playwright_debug
+        name: playwright_videos
+        path: ./playwright_videos
+        retention-days: 1
+    - name: Upload Playwright trace
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright_trace
+        path: ./trace.zip
         retention-days: 1

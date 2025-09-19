@@ -71,7 +71,7 @@ def login(username, password):
     with sync_playwright() as playwright:
         chromium = playwright.chromium
         browser = chromium.launch()
-        context = browser.new_context(record_video_dir="playwright_debug/")
+        context = browser.new_context(record_video_dir="playwright_videos/")
         context.tracing.start(screenshots=True, snapshots=True, sources=True)
         page = context.new_page()
         page.goto("https://fantasy.premierleague.com/")
