@@ -72,11 +72,11 @@ def login(username, password):
         chromium = playwright.chromium
         browser = chromium.launch()
         context = browser.new_context(record_video_dir="playwright_videos/")
-        context.tracing.start(screenshots=True, snapshots=True, sources=True)
         page = context.new_page()
         page.goto("https://fantasy.premierleague.com/")
         page.get_by_role("button", name="Reject All").click()
         page.get_by_role("button", name="Log in").click()
+        page.wait_for_selector('text=Email address');
         page.get_by_role("textbox", name="Email address").fill(username)
         page.get_by_role("textbox", name="Password").fill(password)
         page.get_by_role("button", name="Sign in", exact=True).click()
@@ -91,7 +91,6 @@ def login(username, password):
                 }
             }
         """)
-        context.tracing.stop(path = "playwright_debug/trace.zip")
         context.close()
         browser.close()
 
