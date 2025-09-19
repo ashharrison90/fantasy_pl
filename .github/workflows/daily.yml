@@ -20,7 +20,7 @@ jobs:
     - name: Install deps
       run: pip3 install -r requirements.txt
     - name: Install playwright deps
-      run: playwright install --with-deps chromium
+      run: playwright install --with-deps firefox
     - name: Run solver
       env:
         FANTASY_PL_USERNAME: ${{ secrets.FANTASY_PL_USERNAME }}
