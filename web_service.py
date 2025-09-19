@@ -71,7 +71,8 @@ def login(username, password):
     with sync_playwright() as playwright:
         chromium = playwright.chromium
         browser = chromium.launch()
-        page = browser.new_page()
+        context = browser.new_context(record_video_dir="videos/")
+        page = context.new_page()
         page.goto("https://fantasy.premierleague.com/")
         page.get_by_role("button", name="Reject All").click()
         page.get_by_role("button", name="Log in").click()
@@ -89,6 +90,7 @@ def login(username, password):
                 }
             }
         """)
+        context.close()
         browser.close()
 
     MY_SESSION.headers.update({
