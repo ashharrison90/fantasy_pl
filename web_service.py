@@ -69,7 +69,7 @@ def login(username, password):
 
     # Login via playwright to get the bearer token
     with sync_playwright() as playwright:
-        firefox = playwright.firefox
+        firefox = playwright.firefox # for some reason only firefox works in CI
         browser = firefox.launch()
         context = browser.new_context(record_video_dir="playwright_videos/")
         page = context.new_page()
