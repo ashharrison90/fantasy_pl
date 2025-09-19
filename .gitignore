@@ -2,4 +2,4 @@
 __pycache__/
 .tags
 .debug.log
-videos/
+playwright_debug/
