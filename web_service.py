@@ -70,13 +70,16 @@ def login(username, password):
     # Login via playwright to get the bearer token
     with sync_playwright() as playwright:
         chromium = playwright.chromium
-        browser = chromium.launch()
+        browser = chromium.launch(
+            timeout=60000,
+            headless=True,
+            args=['--no-sandbox', '--disable-dev-shm-usage']  # CI-friendly flags
+        )
         context = browser.new_context(record_video_dir="playwright_videos/")
         page = context.new_page()
         page.goto("https://fantasy.premierleague.com/")
         page.get_by_role("button", name="Reject All").click()
         page.get_by_role("button", name="Log in").click()
-        page.wait_for_selector('text=Email address');
         page.get_by_role("textbox", name="Email address").fill(username)
         page.get_by_role("textbox", name="Password").fill(password)
         page.get_by_role("button", name="Sign in", exact=True).click()
