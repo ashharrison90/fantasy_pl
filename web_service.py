@@ -73,6 +73,7 @@ def login(username, password):
         browser = chromium.launch()
         context = browser.new_context(record_video_dir="videos/")
         page = context.new_page()
+        page.set_default_timeout(60000)
         page.goto("https://fantasy.premierleague.com/")
         page.get_by_role("button", name="Reject All").click()
         page.get_by_role("button", name="Log in").click()
